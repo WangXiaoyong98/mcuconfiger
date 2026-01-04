@@ -1,0 +1,72 @@
+/*
+** 
+**     Revisions:
+**     - rev. 1.0 (2024-05-13)
+**         Initial version.
+** ###################################################################
+*/
+
+/*!
+ * @file SYSTEM_SP28038.C
+ * @version 1.0
+ * @date 2024-05-13
+ * @brief Device specific configuration file for SP28038 (header file)
+ *
+ * Provides a system configuration function and a global variable that contains
+ * the system frequency. It configures the device and initializes the oscillator
+ * (PLL) that is part of the microcontroller device.
+ */
+
+#include <stdint.h>
+#include "sp28038.h"
+
+
+
+/* ----------------------------------------------------------------------------
+   -- Core clock
+   ---------------------------------------------------------------------------- */
+
+uint32_t SystemCoreClock = DEFAULT_SYSTEM_CLOCK;
+
+/* ----------------------------------------------------------------------------
+   -- SystemInit()
+   ---------------------------------------------------------------------------- */
+
+void SystemInit (void) {
+#if ((__FPU_PRESENT == 1) && (__FPU_USED == 1))
+  SCB->CPACR |= ((3UL << 10*2) | (3UL << 11*2));    /* set CP10, CP11 Full Access */
+#endif /* ((__FPU_PRESENT == 1) && (__FPU_USED == 1)) */
+  FLASH->CCTL = 0;
+  /* Watchdog disable */
+#if (DISABLE_WWDT)
+  /* WWDT->UNLOCK: WWDTUNLOCK=0xC520 */
+  WWDT->UNLOCK = WWDT_UNLOCK_WWDTUNLOCK_SET(0xC520); /* Key 1 */
+  /* WWDT->UNLOCK: WWDTUNLOCK=0xD928 */
+  WWDT->UNLOCK = WWDT_UNLOCK_WWDTUNLOCK_SET(0xD928); /* Key 2 */
+  /* WWDT->STCTRLH: ?=0,DISTESTWWDT=0,BYTESEL=0,TESTSEL=0,TESTWWDT=0,?=0,?=1,WAITEN=1,STOPEN=1,DBGEN=0,ALLOWUPDATE=1,WINEN=0,IRQRSTEN=0,CLKSRC=1,WWDTEN=0 */
+  WWDT->STCTRLH = WWDT_STCTRLH_BYTESEL_SET(0x00) |
+                 WWDT_STCTRLH_WAITEN_MASK |
+                 WWDT_STCTRLH_STOPEN_MASK |
+                 WWDT_STCTRLH_ALLOWUPDATE_MASK |
+                 WWDT_STCTRLH_CLKSRC_MASK |
+                 0x0100U;
+#endif /* (DISABLE_WWDT) */
+
+  SystemInitHook();
+}
+
+/* ----------------------------------------------------------------------------
+   -- SystemCoreClockUpdate()
+   ---------------------------------------------------------------------------- */
+
+void SystemCoreClockUpdate (void) {
+  SystemCoreClock = CPU_XTAL_CLK_HZ;   //only for test
+}
+
+/* ----------------------------------------------------------------------------
+   -- SystemInitHook()
+   ---------------------------------------------------------------------------- */
+
+__attribute__ ((weak)) void SystemInitHook (void) {
+  /* Void implementation of the weak function. */
+}

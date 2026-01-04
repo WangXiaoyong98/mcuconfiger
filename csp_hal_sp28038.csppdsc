@@ -1,0 +1,21 @@
+author:
+  name: StarPower-Team
+  email: xqyjlj@126.com
+  website:
+    blog: https://xqyjlj.github.io/
+    github: https://github.com/xqyjlj
+name: csp_hal_SP28038
+version: latest
+license: Apache-2.0
+type: hal
+vendor: StarPower
+vendorUrl:
+  en: https://www.powersemi.cc/index.html
+  zh-cn: https://www.powersemi.cc/index.html
+description:
+  en: Chip Support Package for SP28038 for CSP Software
+  zh-cn: SP28038芯片支持包
+url:
+  en: https://github.com/csplink/csp_hal_apm32f1
+  zh-cn: https://github.com/csplink/csp_hal_apm32f1
+support: xqyjlj@126.com
