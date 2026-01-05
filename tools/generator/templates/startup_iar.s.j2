@@ -1,25 +1,776 @@
-{#
- # Licensed under the Apache License v. 2 (the "License")
- # You may not use this file except in compliance with the License.
- # You may obtain a copy of the License at
- #
- #     https://www.apache.org/licenses/LICENSE-2.0.html
- #
- # Unless required by applicable law or agreed to in writing, software
- # distributed under the License is distributed on an "AS IS" BASIS,
- # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- # See the License for the specific language governing permissions and
- # limitations under the License.
- #
- # Copyright (C) 2024-2024 xqyjlj<xqyjlj@126.com>
- #
- # @author      xqyjlj
- # @file        startup_iar.s.j2
- #
- # Change Logs:
- # Date           Author       Notes
- # ------------   ----------   -----------------------------------------------
- # 2024-12-14     xqyjlj       initial version
- #}
-
-
+; -------------------------------------------------------------------------
+;  @file:    startup_MK66F18.s
+;  @purpose: CMSIS Cortex-M4 Core Device Startup File
+;            MK66F18
+;  @version: 3.0
+;  @date:    2015-3-25
+;  @build:   b200319
+; -------------------------------------------------------------------------
+;
+; Copyright 1997-2016 Freescale Semiconductor, Inc.
+; Copyright 2016-2020 NXP
+; All rights reserved.
+;
+; SPDX-License-Identifier: BSD-3-Clause
+;
+; The modules in this file are included in the libraries, and may be replaced
+; by any user-defined modules that define the PUBLIC symbol _program_start or
+; a user defined start symbol.
+; To override the cstartup defined in the library, simply add your modified
+; version to the workbench project.
+;
+; The vector table is normally located at address 0.
+; When debugging in RAM, it can be located in RAM, aligned to at least 2^6.
+; The name "__vector_table" has special meaning for C-SPY:
+; it is where the SP start value is found, and the NVIC vector
+; table register (VTOR) is initialized to this address if != 0.
+;
+; Cortex-M version
+;
+ 
+        MODULE  ?cstartup
+ 
+        ;; Forward declaration of sections.
+        SECTION CSTACK:DATA:NOROOT(3)
+ 
+        SECTION .intvec:CODE:NOROOT(2)
+ 
+        EXTERN  __iar_program_start
+        EXTERN  SystemInit
+        PUBLIC  __vector_table
+        PUBLIC  __vector_table_0x1c
+        PUBLIC  __Vectors
+        PUBLIC  __Vectors_End
+        PUBLIC  __Vectors_Size
+ 
+        
+        DATA
+ 
+__iar_init$$done:              ; The vector table is not needed
+                      ; until after copy initialization is done
+ 
+__vector_table
+        DCD     sfe(CSTACK)
+        DCD     Reset_Handler
+ 
+        DCD     NMI_Handler                                   ;NMI Handler
+        DCD     HardFault_Handler                             ;Hard Fault Handler
+        DCD     MemManage_Handler                             ;MPU Fault Handler
+        DCD     BusFault_Handler                              ;Bus Fault Handler
+        DCD     UsageFault_Handler                            ;Usage Fault Handler
+__vector_table_0x1c
+        DCD     0                                             ;Reserved
+        DCD     0                                             ;Reserved
+        DCD     0                                             ;Reserved
+        DCD     0                                             ;Reserved
+        DCD     SVC_Handler                                   ;SVCall Handler
+        DCD     DebugMon_Handler                              ;Debug Monitor Handler
+        DCD     0                                             ;Reserved
+        DCD     PendSV_Handler                                ;PendSV Handler
+        DCD     SysTick_Handler                               ;SysTick Handler
+ 
+                                                              ;External Interrupts
+        DCD     DMA0_IRQHandler                         ;DMA Channel 0, 16 Transfer Complete
+        DCD     DMA1_IRQHandler                         ;DMA Channel 1, 17 Transfer Complete
+        DCD     DMA2_IRQHandler                         ;DMA Channel 2, 18 Transfer Complete
+        DCD     DMA3_IRQHandler                         ;DMA Channel 3, 19 Transfer Complete
+        DCD     DMA4_IRQHandler                         ;DMA Channel 4, 20 Transfer Complete
+        DCD     DMA5_IRQHandler                         ;DMA Channel 5, 21 Transfer Complete
+        DCD     DMA6_IRQHandler                         ;DMA Channel 6, 22 Transfer Complete
+        DCD     DMA7_IRQHandler                         ;DMA Channel 7, 23 Transfer Complete
+        DCD     DMA8_IRQHandler                         ;DMA Channel 8, 24 Transfer Complete
+        DCD     DMA9_IRQHandler                         ;DMA Channel 9, 25 Transfer Complete
+        DCD     DMA10_IRQHandler                        ;DMA Channel 10, 26 Transfer Complete
+        DCD     DMA11_IRQHandler                        ;DMA Channel 11, 27 Transfer Complete
+        DCD     DMA12_IRQHandler                        ;DMA Channel 12, 28 Transfer Complete
+        DCD     DMA13_IRQHandler                        ;DMA Channel 13, 29 Transfer Complete
+        DCD     DMA14_IRQHandler                        ;DMA Channel 14, 30 Transfer Complete
+        DCD     DMA15_IRQHandler                        ;DMA Channel 15, 31 Transfer Complete
+        DCD     DMA_Error_IRQHandler                          ;DMA Error Interrupt
+        DCD     0                                       ;Normal Interrupt
+        DCD     0                                       ;FTFE Command complete interrupt
+        DCD     0                                       ;Read Collision Interrupt
+        DCD     0                                       ;Low Voltage Detect, Low Voltage Warning
+        DCD     WWDT_IRQHandler                         ;Low Leakage Wakeup Unit
+        DCD     0                                       ;WDOG Interrupt
+        DCD     0                                       ;RNG Interrupt
+        DCD     I2C1_IRQHandler                               ;I2C0 interrupt
+        DCD     I2C2_IRQHandler                               ;I2C1 interrupt
+        DCD     SPI1_IRQHandler                               ;SPI0 Interrupt
+        DCD     SPI2_IRQHandler                               ;SPI1 Interrupt
+        DCD     SPI3_IRQHandler                            ;I2S0 transmit interrupt
+        DCD     SPI4_IRQHandler                            ;I2S0 receive interrupt
+        DCD     SCI1_IRQHandler                         ;Reserved interrupt 46
+        DCD     SCI2_IRQHandler                        ;UART0 Receive/Transmit interrupt
+        DCD     SCI3_IRQHandler                          ;UART0 Error interrupt
+        DCD     SCI4_IRQHandler                        ;UART1 Receive/Transmit interrupt
+        DCD     SCI5_IRQHandler                          ;UART1 Error interrupt
+        DCD     SCI6_IRQHandler                        ;UART2 Receive/Transmit interrupt
+        DCD     ADCA_INT1_IRQHandler                          ;UART2 Error interrupt
+        DCD     ADCA_INT2_IRQHandler                        ;UART3 Receive/Transmit interrupt
+        DCD     ADCA_INT3_IRQHandler                          ;UART3 Error interrupt
+        DCD     ADCA_INT4_IRQHandler                               ;ADC0 interrupt
+        DCD     ADCA_EVT_IRQHandler                               ;CMP0 interrupt
+        DCD     ADCB_INT1_IRQHandler                               ;CMP1 interrupt
+        DCD     ADCB_INT2_IRQHandler                               ;FTM0 fault, overflow and channels interrupt
+        DCD     ADCB_INT3_IRQHandler                               ;FTM1 fault, overflow and channels interrupt
+        DCD     ADCB_INT4_IRQHandler                               ;FTM2 fault, overflow and channels interrupt
+        DCD     ADCB_EVT_IRQHandler                                ;CMT interrupt
+        DCD     ADCC_INT1_IRQHandler                                ;RTC interrupt
+        DCD     ADCC_INT2_IRQHandler                        ;RTC seconds interrupt
+        DCD     ADCC_INT3_IRQHandler                               ;PIT timer channel 0 interrupt
+        DCD     ADCC_INT4_IRQHandler                               ;PIT timer channel 1 interrupt
+        DCD     ADCC_EVT_IRQHandler                               ;PIT timer channel 2 interrupt
+        DCD     CMP1_IRQHandler                               ;PIT timer channel 3 interrupt
+        DCD     CMP2_IRQHandler                               ;PDB0 Interrupt
+        DCD     VDT1_IRQHandler                               ;USB0 interrupt
+        DCD     VDT2_IRQHandler                             ;USBDCD Interrupt
+        DCD     MCAN1_IRQHandler                         ;Reserved interrupt 71
+        DCD     MCAN2_IRQHandler                               ;DAC0 interrupt
+        DCD     EPWM1_IRQHandler                                ;MCG Interrupt
+        DCD     EPWM2_IRQHandler                             ;LPTimer interrupt
+        DCD     EPWM3_IRQHandler                              ;Port A interrupt
+        DCD     EPWM4_IRQHandler                              ;Port B interrupt
+        DCD     EPWM5_IRQHandler                              ;Port C interrupt
+        DCD     EPWM6_IRQHandler                              ;Port D interrupt
+        DCD     EPWM7_IRQHandler                              ;Port E interrupt
+        DCD     0                                ;Software interrupt
+        DCD     EPWM1_TZ_IRQHandler                               ;SPI2 Interrupt
+        DCD     EPWM2_TZ_IRQHandler                        ;UART4 Receive/Transmit interrupt
+        DCD     EPWM3_TZ_IRQHandler                          ;UART4 Error interrupt
+        DCD     EPWM4_TZ_IRQHandler                         ;Reserved interrupt 84
+        DCD     EPWM5_TZ_IRQHandler                         ;Reserved interrupt 85
+        DCD     EPWM6_TZ_IRQHandler                               ;CMP2 interrupt
+        DCD     EPWM7_TZ_IRQHandler                               ;FTM3 fault, overflow and channels interrupt
+        DCD     0                               ;DAC1 interrupt
+        DCD     XINT1_IRQHandler                               ;ADC1 interrupt
+        DCD     XINT2_IRQHandler                               ;I2C2 interrupt
+        DCD     XINT3_IRQHandler           ;CAN0 OR'd message buffers interrupt
+        DCD     XINT4_IRQHandler                       ;CAN0 bus off interrupt
+        DCD     XINT5_IRQHandler                         ;CAN0 error interrupt
+        DCD     GPIOA_IRQHandler                    ;CAN0 Tx warning interrupt
+        DCD     GPIOB_IRQHandler                    ;CAN0 Rx warning interrupt
+        DCD     0                                       ;CAN0 wake up interrupt
+        DCD     ECAP1_IRQHandler                               ;SDHC interrupt
+        DCD     ECAP2_IRQHandler                    ;Ethernet MAC IEEE 1588 Timer Interrupt
+        DCD     ECAP3_IRQHandler                      ;Ethernet MAC Transmit Interrupt
+        DCD     0                                      ;Ethernet MAC Receive Interrupt
+        DCD     TDTLT_IRQHandler                         ;Ethernet MAC Error and miscelaneous Interrupt
+        DCD     TDTHT_IRQHandler                            ;LPUART0 status/error interrupt
+        DCD     FLASH_ECCERR_IRQHandler                               ;TSI0 interrupt
+        DCD     0                                               ;TPM1 fault, overflow and channels interrupt
+        DCD     0                                              ;TPM2 fault, overflow and channels interrupt
+        DCD     EQEP1_IRQHandler                           ;USBHSDCD, USBHS Phy Interrupt
+        DCD     EQEP2_IRQHandler                               ;I2C3 interrupt
+        DCD     PTIM_CH0_IRQHandler                               ;CMP3 interrupt
+        DCD     PTIM_CH1_IRQHandler                              ;USB high speed OTG interrupt
+        DCD     PTIM_CH2_IRQHandler           ;CAN1 OR'd message buffers interrupt
+        DCD     PTIM_CH3_IRQHandler                       ;CAN1 bus off interrupt
+        DCD     SDFM1_IRQHandler                         ;CAN1 error interrupt
+        DCD     SDFM1_DR0_IRQHandler                    ;CAN1 Tx warning interrupt
+        DCD     SDFM1_DR1_IRQHandler                    ;CAN1 Rx warning interrupt
+        DCD     SDFM1_DR2_IRQHandler                       ;CAN1 wake up interrupt
+        DCD     SDFM1_DR3_IRQHandler                                    ;116
+        DCD     SDFM2_IRQHandler                                    ;117
+        DCD     SDFM2_DR0_IRQHandler                                    ;118
+        DCD     SDFM2_DR1_IRQHandler                                    ;119
+        DCD     SDFM2_DR2_IRQHandler                                    ;120
+        DCD     SDFM2_DR3_IRQHandler                                    ;121
+        DCD     0                                    ;122
+        DCD     0                                    ;123
+        DCD     LPTIM_IRQHandler                                    ;124
+        DCD     0                                    ;125
+        DCD     0                                    ;126
+        DCD     0                                    ;127
+        DCD     0                                    ;128
+        DCD     CORDIC_IRQHandler                                    ;129
+        DCD     0                                    ;130
+        DCD     0                                    ;131
+        DCD     0                                    ;132
+        DCD     0                                    ;133
+        DCD     0                                    ;134
+        DCD     0                                    ;135
+        DCD     0                                    ;136
+        DCD     0                                    ;137
+        DCD     0                                    ;138
+        DCD     0                                    ;139
+        DCD     0                                    ;140
+        DCD     0                                    ;141
+        DCD     0                                    ;142
+        DCD     0                                    ;143
+        DCD     0                                    ;144
+        DCD     0                                    ;145
+        DCD     0                                    ;146
+        DCD     0                                    ;147
+        DCD     0                                    ;148
+        DCD     0                                    ;149
+        DCD     0                                    ;150
+        DCD     0                                    ;151
+        DCD     0                                    ;152
+        DCD     0                                    ;153
+        DCD     0                                    ;154
+        DCD     0                                    ;155
+        DCD     0                                    ;156
+        DCD     0                                    ;157
+        DCD     0                                    ;158
+        DCD     0                                    ;159
+        DCD     0                                    ;160
+        DCD     0                                    ;161
+        DCD     0                                    ;162
+        DCD     0                                    ;163
+        DCD     0                                    ;164
+        DCD     0                                    ;165
+        DCD     0                                    ;166
+        DCD     0                                    ;167
+        DCD     0                                    ;168
+        DCD     0                                    ;169
+        DCD     0                                    ;170
+        DCD     0                                    ;171
+        DCD     0                                    ;172
+        DCD     0                                    ;173
+        DCD     0                                    ;174
+        DCD     0                                    ;175
+        DCD     0                                    ;176
+        DCD     0                                    ;177
+        DCD     0                                    ;178
+        DCD     0                                    ;179
+        DCD     0                                    ;180
+        DCD     0                                    ;181
+        DCD     0                                    ;182
+        DCD     0                                    ;183
+        DCD     0                                    ;184
+        DCD     0                                    ;185
+        DCD     0                                    ;186
+        DCD     0                                    ;187
+        DCD     0                                    ;188
+        DCD     0                                    ;189
+        DCD     0                                    ;190
+        DCD     0                                    ;191
+        DCD     0                                    ;192
+        DCD     0                                    ;193
+        DCD     0                                    ;194
+        DCD     0                                    ;195
+        DCD     0                                    ;196
+        DCD     0                                    ;197
+        DCD     0                                    ;198
+        DCD     0                                    ;199
+        DCD     0                                    ;200
+        DCD     0                                    ;201
+        DCD     0                                    ;202
+        DCD     0                                    ;203
+        DCD     0                                    ;204
+        DCD     0                                    ;205
+        DCD     0                                    ;206
+        DCD     0                                    ;207
+        DCD     0                                    ;208
+        DCD     0                                    ;209
+        DCD     0                                    ;210
+        DCD     0                                    ;211
+        DCD     0                                    ;212
+        DCD     0                                    ;213
+        DCD     0                                    ;214
+        DCD     0                                    ;215
+        DCD     0                                    ;216
+        DCD     0                                    ;217
+        DCD     0                                    ;218
+        DCD     0                                    ;219
+        DCD     0                                    ;220
+        DCD     0                                    ;221
+        DCD     0                                    ;222
+        DCD     0                                    ;223
+        DCD     0                                    ;224
+        DCD     0                                    ;225
+        DCD     0                                    ;226
+        DCD     0                                    ;227
+        DCD     0                                    ;228
+        DCD     0                                    ;229
+        DCD     0                                    ;230
+        DCD     0                                    ;231
+        DCD     0                                    ;232
+        DCD     0                                    ;233
+        DCD     0                                    ;234
+        DCD     0                                    ;235
+        DCD     0                                    ;236
+        DCD     0                                    ;237
+        DCD     0                                    ;238
+        DCD     0                                    ;239
+        DCD     0                                    ;240
+        DCD     0                                    ;241
+        DCD     0                                    ;242
+        DCD     0                                    ;243
+        DCD     0                                    ;244
+        DCD     0                                    ;245
+        DCD     0                                    ;246
+        DCD     0                                    ;247
+        DCD     0                                    ;248
+        DCD     0                                    ;249
+        DCD     0                                    ;250
+        DCD     0                                    ;251
+        DCD     0                                    ;252
+        DCD     0                                    ;253
+        DCD     0                                    ;254
+        DCD     0xFFFFFFFF                                    ; Reserved for user TRIM value
+__Vectors_End
+ 
+        SECTION FlashConfig:CODE
+__FlashConfig
+        DCD 0xFFFFFFFF
+        DCD 0xFFFFFFFF
+        DCD 0xFFFFFFFF
+        DCD 0xFFFFFFFE
+__FlashConfig_End
+ 
+__Vectors       EQU   __vector_table
+__Vectors_Size  EQU   __Vectors_End - __Vectors
+ 
+ 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; Default interrupt handlers.
+;;
+        THUMB
+ 
+        PUBWEAK Reset_Handler
+        SECTION .text:CODE:REORDER:NOROOT(2)
+Reset_Handler
+        CPSID   I               ; Mask interrupts
+        LDR     R0, =0xE000ED08
+        LDR     R1, =__vector_table
+        STR     R1, [R0]
+        LDR     R2, [R1]
+        MSR     MSP, R2
+        LDR     R0, =SystemInit
+        BLX     R0
+        CPSIE   I               ; Unmask interrupts
+        LDR     R0, =__iar_program_start
+        BX      R0
+ 
+        PUBWEAK NMI_Handler
+        SECTION .text:CODE:REORDER:NOROOT(1)
+NMI_Handler
+        B .
+ 
+        PUBWEAK HardFault_Handler
+        SECTION .text:CODE:REORDER:NOROOT(1)
+HardFault_Handler
+        B .
+ 
+        PUBWEAK MemManage_Handler
+        SECTION .text:CODE:REORDER:NOROOT(1)
+MemManage_Handler
+        B .
+ 
+        PUBWEAK BusFault_Handler
+        SECTION .text:CODE:REORDER:NOROOT(1)
+BusFault_Handler
+        B .
+ 
+        PUBWEAK UsageFault_Handler
+        SECTION .text:CODE:REORDER:NOROOT(1)
+UsageFault_Handler
+        B .
+ 
+        PUBWEAK SVC_Handler
+        SECTION .text:CODE:REORDER:NOROOT(1)
+SVC_Handler
+        B .
+ 
+        PUBWEAK DebugMon_Handler
+        SECTION .text:CODE:REORDER:NOROOT(1)
+DebugMon_Handler
+        B .
+ 
+        PUBWEAK PendSV_Handler
+        SECTION .text:CODE:REORDER:NOROOT(1)
+PendSV_Handler
+        B .
+ 
+        PUBWEAK SysTick_Handler
+        SECTION .text:CODE:REORDER:NOROOT(1)
+SysTick_Handler
+        B .
+ 
+        PUBWEAK DMA0_IRQHandler
+        SECTION .text:CODE:REORDER:NOROOT(2)
+DMA0_IRQHandler
+        LDR     R0, =DMA0_IRQHandler
+        BX      R0
+ 
+        PUBWEAK DMA1_IRQHandler
+        SECTION .text:CODE:REORDER:NOROOT(2)
+DMA1_IRQHandler
+        LDR     R0, =DMA1_IRQHandler
+        BX      R0
+ 
+        PUBWEAK DMA2_IRQHandler
+        SECTION .text:CODE:REORDER:NOROOT(2)
+DMA2_IRQHandler
+        LDR     R0, =DMA2_IRQHandler
+        BX      R0
+ 
+        PUBWEAK DMA3_IRQHandler
+        SECTION .text:CODE:REORDER:NOROOT(2)
+DMA3_IRQHandler
+        LDR     R0, =DMA3_IRQHandler
+        BX      R0
+ 
+        PUBWEAK DMA4_IRQHandler
+        SECTION .text:CODE:REORDER:NOROOT(2)
+DMA4_IRQHandler
+        LDR     R0, =DMA4_IRQHandler
+        BX      R0
+ 
+        PUBWEAK DMA5_IRQHandler
+        SECTION .text:CODE:REORDER:NOROOT(2)
+DMA5_IRQHandler
+        LDR     R0, =DMA5_IRQHandler
+        BX      R0
+ 
+        PUBWEAK DMA6_IRQHandler
+        SECTION .text:CODE:REORDER:NOROOT(2)
+DMA6_IRQHandler
+        LDR     R0, =DMA6_IRQHandler
+        BX      R0
+ 
+        PUBWEAK DMA7_IRQHandler
+        SECTION .text:CODE:REORDER:NOROOT(2)
+DMA7_IRQHandler
+        LDR     R0, =DMA7_IRQHandler
+        BX      R0
+ 
+        PUBWEAK DMA8_IRQHandler
+        SECTION .text:CODE:REORDER:NOROOT(2)
+DMA8_IRQHandler
+        LDR     R0, =DMA8_IRQHandler
+        BX      R0
+ 
+        PUBWEAK DMA9_IRQHandler
+        SECTION .text:CODE:REORDER:NOROOT(2)
+DMA9_IRQHandler
+        LDR     R0, =DMA9_IRQHandler
+        BX      R0
+ 
+        PUBWEAK DMA10_IRQHandler
+        SECTION .text:CODE:REORDER:NOROOT(2)
+DMA10_IRQHandler
+        LDR     R0, =DMA10_IRQHandler
+        BX      R0
+ 
+        PUBWEAK DMA11_IRQHandler
+        SECTION .text:CODE:REORDER:NOROOT(2)
+DMA11_IRQHandler
+        LDR     R0, =DMA11_IRQHandler
+        BX      R0
+ 
+        PUBWEAK DMA12_IRQHandler
+        SECTION .text:CODE:REORDER:NOROOT(2)
+DMA12_IRQHandler
+        LDR     R0, =DMA12_IRQHandler
+        BX      R0
+ 
+        PUBWEAK DMA13_IRQHandler
+        SECTION .text:CODE:REORDER:NOROOT(2)
+DMA13_IRQHandler
+        LDR     R0, =DMA13_IRQHandler
+        BX      R0
+ 
+        PUBWEAK DMA14_IRQHandler
+        SECTION .text:CODE:REORDER:NOROOT(2)
+DMA14_IRQHandler
+        LDR     R0, =DMA14_IRQHandler
+        BX      R0
+ 
+        PUBWEAK DMA15_IRQHandler
+        SECTION .text:CODE:REORDER:NOROOT(2)
+DMA15_IRQHandler
+        LDR     R0, =DMA15_IRQHandler
+        BX      R0
+ 
+        PUBWEAK DMA_Error_IRQHandler
+        SECTION .text:CODE:REORDER:NOROOT(2)
+DMA_Error_IRQHandler
+        LDR     R0, =DMA_Error_IRQHandler
+        BX      R0
+ 
+ 
+        PUBWEAK WWDT_IRQHandler
+        PUBWEAK I2C1_IRQHandler
+        SECTION .text:CODE:REORDER:NOROOT(2)
+I2C1_IRQHandler
+        LDR     R0, =I2C1_IRQHandler
+        BX      R0
+ 
+        PUBWEAK I2C2_IRQHandler
+        SECTION .text:CODE:REORDER:NOROOT(2)
+I2C2_IRQHandler
+        LDR     R0, =I2C2_IRQHandler
+        BX      R0
+ 
+        PUBWEAK SPI1_IRQHandler
+        SECTION .text:CODE:REORDER:NOROOT(2)
+SPI1_IRQHandler
+        LDR     R0, =SPI1_IRQHandler
+        BX      R0
+ 
+        PUBWEAK SPI2_IRQHandler
+        SECTION .text:CODE:REORDER:NOROOT(2)
+SPI2_IRQHandler
+        LDR     R0, =SPI2_IRQHandler
+        BX      R0
+ 
+        PUBWEAK SPI3_IRQHandler
+        SECTION .text:CODE:REORDER:NOROOT(2)
+SPI3_IRQHandler
+        LDR     R0, =SPI3_IRQHandler
+        BX      R0
+ 
+        PUBWEAK SPI4_IRQHandler
+        SECTION .text:CODE:REORDER:NOROOT(2)
+SPI4_IRQHandler
+        LDR     R0, =SPI4_IRQHandler
+        BX      R0
+ 
+        PUBWEAK SCI1_IRQHandler
+        SECTION .text:CODE:REORDER:NOROOT(2)
+SCI1_IRQHandler
+        LDR     R0, =SCI1_IRQHandler
+        BX      R0
+ 
+        PUBWEAK SCI2_IRQHandler
+        SECTION .text:CODE:REORDER:NOROOT(2)
+SCI2_IRQHandler
+        LDR     R0, =SCI2_IRQHandler
+        BX      R0
+ 
+        PUBWEAK SCI3_IRQHandler
+        SECTION .text:CODE:REORDER:NOROOT(2)
+SCI3_IRQHandler
+        LDR     R0, =SCI3_IRQHandler
+        BX      R0
+ 
+        PUBWEAK SCI4_IRQHandler
+        SECTION .text:CODE:REORDER:NOROOT(2)
+SCI4_IRQHandler
+        LDR     R0, =SCI4_IRQHandler
+        BX      R0
+ 
+        PUBWEAK SCI5_IRQHandler
+        SECTION .text:CODE:REORDER:NOROOT(2)
+SCI5_IRQHandler
+        LDR     R0, =SCI5_IRQHandler
+        BX      R0
+ 
+        PUBWEAK SCI6_IRQHandler
+        SECTION .text:CODE:REORDER:NOROOT(2)
+SCI6_IRQHandler
+        LDR     R0, =SCI6_IRQHandler
+        BX      R0
+ 
+      
+ 
+        PUBWEAK ADCA_INT1_IRQHandler
+        PUBWEAK ADCA_INT2_IRQHandler
+        PUBWEAK ADCA_INT3_IRQHandler
+        PUBWEAK ADCA_INT4_IRQHandler
+        PUBWEAK ADCA_EVT_IRQHandler
+        PUBWEAK ADCB_INT1_IRQHandler
+        PUBWEAK ADCB_INT2_IRQHandler
+        PUBWEAK ADCB_INT3_IRQHandler
+        PUBWEAK ADCB_INT4_IRQHandler
+        PUBWEAK ADCB_EVT_IRQHandler
+        PUBWEAK ADCC_INT1_IRQHandler
+        PUBWEAK ADCC_INT2_IRQHandler
+        PUBWEAK ADCC_INT3_IRQHandler
+        PUBWEAK ADCC_INT4_IRQHandler
+        PUBWEAK ADCC_EVT_IRQHandler
+        PUBWEAK CMP1_IRQHandler
+        PUBWEAK CMP2_IRQHandler
+        PUBWEAK VDT1_IRQHandler
+        PUBWEAK VDT2_IRQHandler
+        PUBWEAK MCAN1_IRQHandler
+        PUBWEAK MCAN2_IRQHandler
+        PUBWEAK EPWM1_IRQHandler
+        PUBWEAK EPWM2_IRQHandler
+        PUBWEAK EPWM3_IRQHandler
+        PUBWEAK EPWM4_IRQHandler
+        PUBWEAK EPWM5_IRQHandler
+        PUBWEAK EPWM6_IRQHandler
+        PUBWEAK EPWM7_IRQHandler
+ 
+        PUBWEAK EPWM1_TZ_IRQHandler
+ 
+ 
+        PUBWEAK EPWM2_TZ_IRQHandler
+        PUBWEAK EPWM3_TZ_IRQHandler
+ 
+ 
+        PUBWEAK EPWM4_TZ_IRQHandler
+        PUBWEAK EPWM5_TZ_IRQHandler
+        PUBWEAK EPWM6_TZ_IRQHandler
+        PUBWEAK EPWM7_TZ_IRQHandler
+        PUBWEAK XINT1_IRQHandler
+        PUBWEAK XINT2_IRQHandler
+        PUBWEAK XINT3_IRQHandler
+        PUBWEAK XINT4_IRQHandler
+ 
+        PUBWEAK XINT5_IRQHandler
+        PUBWEAK GPIOA_IRQHandler
+        SECTION .text:CODE:REORDER:NOROOT(2)
+GPIOA_IRQHandler
+        LDR     R0, =GPIOA_IRQHandler
+        BX      R0
+ 
+        PUBWEAK GPIOB_IRQHandler
+        SECTION .text:CODE:REORDER:NOROOT(2)
+GPIOB_IRQHandler
+        LDR     R0, =GPIOB_IRQHandler
+        BX      R0
+ 
+        PUBWEAK ECAP1_IRQHandler
+ 
+ 
+        PUBWEAK ECAP2_IRQHandler
+ 
+ 
+        PUBWEAK ECAP3_IRQHandler
+ 
+ 
+        PUBWEAK TDTLT_IRQHandler
+ 
+        PUBWEAK TDTHT_IRQHandler
+        PUBWEAK FLASH_ECCERR_IRQHandler
+FLASH_ECCERR_IRQHandler
+        LDR     R0, =FLASH_ECCERR_IRQHandler
+        BX      R0
+        
+        PUBWEAK EQEP1_IRQHandler
+ 
+        PUBWEAK EQEP2_IRQHandler
+ 
+        PUBWEAK PTIM_CH0_IRQHandler
+        PUBWEAK PTIM_CH1_IRQHandler
+        PUBWEAK PTIM_CH2_IRQHandler
+        PUBWEAK PTIM_CH3_IRQHandler
+ 
+        PUBWEAK SDFM1_IRQHandler
+        PUBWEAK SDFM1_DR0_IRQHandler
+ 
+        PUBWEAK SDFM1_DR1_IRQHandler
+        PUBWEAK SDFM1_DR2_IRQHandler
+        PUBWEAK SDFM1_DR3_IRQHandler
+        PUBWEAK SDFM2_IRQHandler
+        PUBWEAK SDFM2_DR0_IRQHandler
+SDFM2_DR0_IRQHandler
+        LDR     R0, =SDFM2_DR0_IRQHandler
+        BX      R0
+        PUBWEAK SDFM2_DR1_IRQHandler
+ 
+ 
+        PUBWEAK SDFM2_DR2_IRQHandler
+        PUBWEAK SDFM2_DR3_IRQHandler
+        PUBWEAK LPTIM_IRQHandler
+        PUBWEAK CORDIC_IRQHandler
+        
+ 
+        PUBWEAK DefaultISR
+        SECTION .text:CODE:REORDER:NOROOT(1)
+DMA0_IRQHandler
+DMA1_IRQHandler
+DMA2_IRQHandler
+DMA3_IRQHandler
+DMA4_IRQHandler
+DMA5_IRQHandler
+DMA6_IRQHandler
+DMA7_IRQHandler
+DMA8_IRQHandler
+DMA9_IRQHandler
+DMA10_IRQHandler
+DMA11_IRQHandler
+DMA12_IRQHandler
+DMA13_IRQHandler
+DMA14_IRQHandler
+DMA15_IRQHandler
+DMA_Error_IRQHandler
+WWDT_IRQHandler
+I2C1_IRQHandler
+I2C2_IRQHandler
+SPI1_IRQHandler
+SPI2_IRQHandler
+SPI3_IRQHandler
+SPI4_IRQHandler
+SCI1_IRQHandler
+SCI2_IRQHandler
+SCI3_IRQHandler
+SCI4_IRQHandler
+SCI5_IRQHandler
+SCI6_IRQHandler
+ADCA_INT1_IRQHandler
+ADCA_INT2_IRQHandler
+ADCA_INT3_IRQHandler
+ADCA_INT4_IRQHandler
+ADCA_EVT_IRQHandler
+ADCB_INT1_IRQHandler
+ADCB_INT2_IRQHandler
+ADCB_INT3_IRQHandler
+ADCB_INT4_IRQHandler
+ADCB_EVT_IRQHandler
+ADCC_INT1_IRQHandler
+ADCC_INT2_IRQHandler
+ADCC_INT3_IRQHandler
+ADCC_INT4_IRQHandler
+ADCC_EVT_IRQHandler
+CMP1_IRQHandler
+CMP2_IRQHandler
+VDT1_IRQHandler
+VDT2_IRQHandler
+EPWM1_IRQHandler
+EPWM2_IRQHandler
+EPWM3_IRQHandler
+EPWM4_IRQHandler
+EPWM5_IRQHandler
+EPWM6_IRQHandler
+EPWM7_IRQHandler
+EPWM1_TZ_IRQHandler
+EPWM2_TZ_IRQHandler
+EPWM3_TZ_IRQHandler
+EPWM4_TZ_IRQHandler
+EPWM5_TZ_IRQHandler
+EPWM6_TZ_IRQHandler
+EPWM7_TZ_IRQHandler
+XINT1_IRQHandler
+XINT2_IRQHandler
+XINT3_IRQHandler
+XINT4_IRQHandler
+XINT5_IRQHandler
+GPIOA_IRQHandler
+GPIOB_IRQHandler
+ECAP1_IRQHandler
+ECAP2_IRQHandler
+ECAP3_IRQHandler
+TDTLT_IRQHandler
+TDTHT_IRQHandler
+MCAN1_IRQHandler
+MCAN2_IRQHandler
+EQEP1_IRQHandler
+EQEP2_IRQHandler
+PTIM_CH0_IRQHandler
+PTIM_CH1_IRQHandler
+PTIM_CH2_IRQHandler
+PTIM_CH3_IRQHandler
+SDFM1_IRQHandler
+SDFM1_DR0_IRQHandler
+SDFM1_DR1_IRQHandler
+SDFM1_DR2_IRQHandler
+SDFM1_DR3_IRQHandler
+SDFM2_IRQHandler
+SDFM2_DR1_IRQHandler
+SDFM2_DR2_IRQHandler
+SDFM2_DR3_IRQHandler
+LPTIM_IRQHandler
+DCC1_IRQHandler
+DCC2_IRQHandler
+CORDIC_IRQHandler
+DefaultISR
+        B DefaultISR
+ 
+        END

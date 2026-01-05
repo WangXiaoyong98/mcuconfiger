@@ -1,862 +1,443 @@
-{#
- # Licensed under the Apache License v. 2 (the "License")
- # You may not use this file except in compliance with the License.
- # You may obtain a copy of the License at
- #
- #     https://www.apache.org/licenses/LICENSE-2.0.html
- #
- # Unless required by applicable law or agreed to in writing, software
- # distributed under the License is distributed on an "AS IS" BASIS,
- # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- # See the License for the specific language governing permissions and
- # limitations under the License.
- #
- # Copyright (C) 2024-2024 xqyjlj<xqyjlj@126.com>
- #
- # @author      xqyjlj
- # @file        startup_gcc.S.j2
- #
- # Change Logs:
- # Date           Author       Notes
- # ------------   ----------   -----------------------------------------------
- # 2024-12-14     xqyjlj       initial version
- #}
 
-{%- set info = CSP.project|chip_info %}
-/**
- * *****************************************************************************
- *  @author:            {{ CSP.author }}
- *  @file:              {{ CSP.file }}
- *  @brief:             {{ CSP.brief }}
- *  @version:           {{ CSP.version }}
- *  @hal:               {{ CSP.project.vendor }}.{{ CSP.project.gen.hal }}@{{ CSP.project.gen.halVersion }}
- *  @project:           {{ CSP.project.name }}
- *  @targetChip:        {{ CSP.project.targetChip }}
- *  @time:              {{ CSP.time }}
- *
- * *****************************************************************************
- *  @attention
- *
- *  Copyright (C) {{ year }} csp software.
- *  All rights reserved.
- *
- * *****************************************************************************
- */
+/*****************************************************************************/
+/* Version: GCC for ARM Embedded Processors                                  */
+/*****************************************************************************/
     .syntax unified
-    .cpu cortex-m3
-    .fpu softvfp
+    .arch armv7-m
+
+    .section .isr_vector, "a"
+    .align 2
+    .globl __isr_vector
+__isr_vector:
+    .long   __StackTop                                      /* Top of Stack */
+    .long   Reset_Handler                                   /* Reset Handler */
+    .long   NMI_Handler                                     /* NMI Handler*/
+    .long   HardFault_Handler                               /* Hard Fault Handler*/
+    .long   MemManage_Handler                               /* MPU Fault Handler*/
+    .long   BusFault_Handler                                /* Bus Fault Handler*/
+    .long   UsageFault_Handler                              /* Usage Fault Handler*/
+    .long   0                                               /* Reserved*/
+    .long   0                                               /* Reserved*/
+    .long   0                                               /* Reserved*/
+    .long   0                                               /* Reserved*/
+    .long   SVC_Handler                                     /* SVCall Handler*/
+    .long   DebugMon_Handler                                /* Debug Monitor Handler*/
+    .long   0                                               /* Reserved*/
+    .long   PendSV_Handler                                  /* PendSV Handler*/
+    .long   SysTick_Handler                                 /* SysTick Handler*/
+
+                                                            /* External Interrupts*/
+    .long   DMA0_IRQHandler                                 /* DMA Channel 0 Transfer Complete*/
+    .long   DMA1_IRQHandler                                 /* DMA Channel 1 Transfer Complete*/
+    .long   DMA2_IRQHandler                                 /* DMA Channel 2 Transfer Complete*/
+    .long   DMA3_IRQHandler                                 /* DMA Channel 3 Transfer Complete*/
+    .long   DMA4_IRQHandler                                 /* DMA Channel 4 Transfer Complete*/
+    .long   DMA5_IRQHandler                                 /* DMA Channel 5 Transfer Complete*/
+    .long   DMA6_IRQHandler                                 /* DMA Channel 6 Transfer Complete*/
+    .long   DMA7_IRQHandler                                 /* DMA Channel 7 Transfer Complete*/
+    .long   DMA8_IRQHandler                                 /* DMA Channel 8 Transfer Complete*/
+    .long   DMA9_IRQHandler                                 /* DMA Channel 9 Transfer Complete*/
+    .long   DMA10_IRQHandler                                /* DMA Channel 10 Transfer Complete*/
+    .long   DMA11_IRQHandler                                /* DMA Channel 11 Transfer Complete*/
+    .long   DMA12_IRQHandler                                /* DMA Channel 12 Transfer Complete*/
+    .long   DMA13_IRQHandler                                /* DMA Channel 13 Transfer Complete*/
+    .long   DMA14_IRQHandler                                /* DMA Channel 14 Transfer Complete*/
+    .long   DMA15_IRQHandler                                /* DMA Channel 15 Transfer Complete*/
+    .long   DMA1_Error_IRQHandler             /* 32: DMA Error Interrupt*/
+    .long     MCM_IRQHandler                    /* 33: Normal Interrupt*/
+    .long     FLASH_IRQHandler                  /* 34: FLASH*/
+    .long     0                                 /* 35: FLASH*/
+    .long     LVD_IRQHandler                    /* 36: low voltage detector */
+    .long     LLW_IRQHandler                    /* 37: low leakage wakeup*/
+    .long     WDOG_IRQHandler                   /* 38: WWDOG and EWM share the interrupt*/
+    .long     0                                 /* 39: Reserved*/
+    .long     I2C1_IRQHandler                   /* 40: I2C1 Error*/
+    .long     I2C2_IRQHandler                   /* 41: I2C2 Event*/
+    .long     SPI1_IRQHandler                   /* 42: SPI1*/
+    .long     SPI2_IRQHandler                   /* 43: SPI2*/
+    .long     SPI3_IRQHandler                   /* 44: SPI1*/
+    .long     SPI4_IRQHandler                   /* 45: SPI2*/
+    .long     USART1_IRQHandler                 /* 46: USART1*/
+    .long     USART2_IRQHandler                 /* 47: USART2*/
+    .long     USART3_IRQHandler                 /* 48: USART1*/
+    .long     USART4_IRQHandler                 /* 49: USART2*/
+    .long     USART5_IRQHandler                 /* 50: USART1*/
+    .long     USART6_IRQHandler                 /* 51: USART2*/
+    .long     ADCA_INT1_IRQHandler              /* 52: ADC1*/
+    .long     ADCA_INT2_IRQHandler              /* 53: ADC1*/
+    .long     ADCA_INT3_IRQHandler              /* 54: ADC1*/
+    .long     ADCA_INT4_IRQHandler              /* 55: ADC1*/
+    .long     ADCA_EVT_IRQHandler               /* 56: ADC1 EVT*/
+    .long     ADCB_INT1_IRQHandler              /* 57: ADC2*/
+    .long     ADCB_INT2_IRQHandler              /* 58: ADC2*/
+    .long     ADCB_INT3_IRQHandler              /* 59: ADC2*/
+    .long     ADCB_INT4_IRQHandler              /* 60: ADC2*/
+    .long     ADCB_EVT_IRQHandler               /* 61: ADC2 EVT*/
+    .long     ADCC_INT1_IRQHandler              /* 62: ADC3*/
+    .long     ADCC_INT2_IRQHandler              /* 63: ADC3*/
+    .long     ADCC_INT3_IRQHandler              /* 64: ADC3*/
+    .long     ADCC_INT4_IRQHandler              /* 65: ADC3*/
+    .long     ADCC_EVT_IRQHandler               /* 66: ADC3 EVT*/
+    .long     CMP1_IRQHandler                   /* 67: CMP1 Interrupt*/
+    .long     CMP2_IRQHandler                   /* 68: CMP2 Interrupt*/
+    .long     CMP3_IRQHandler                   /* 69: CMP3 Interrupt*/
+    .long     CMP4_IRQHandler                   /* 70: CMP4 Interrupt*/
+    .long     CMP5_IRQHandler                   /* 71: CMP5 Interrupt*/
+    .long     CMP6_IRQHandler                   /* 72: CMP6 Interrupt*/
+    .long     EPWM1_IRQHandler                  /* 73: EPWM1 Interrupt*/
+    .long     EPWM2_IRQHandler                  /* 74: EPWM2 Interrupt*/
+    .long     EPWM3_IRQHandler                  /* 75: EPWM3 Interrupt*/
+    .long     EPWM4_IRQHandler                  /* 76: EPWM4 Interrupt*/
+    .long     EPWM5_IRQHandler                  /* 77: EPWM5 Interrupt*/
+    .long     EPWM6_IRQHandler                  /* 78: EPWM6 Interrupt*/
+    .long     EPWM7_IRQHandler                  /* 79: EPWM7 Interrupt*/
+    .long     0                                 /* 80: Reserved*/
+    .long     EPWM1_TZ_IRQHandler               /* 81: EPWM1 Tripzone Interrupt*/
+    .long     EPWM2_TZ_IRQHandler               /* 82: EPWM2 Tripzone Interrupt*/
+    .long     EPWM3_TZ_IRQHandler               /* 83: EPWM3 Tripzone Interrupt*/
+    .long     EPWM4_TZ_IRQHandler               /* 94: EPWM4 Tripzone Interrupt*/
+    .long     EPWM5_TZ_IRQHandler               /* 85: EPWM5 Tripzone Interrupt*/
+    .long     EPWM6_TZ_IRQHandler               /* 86: EPWM6 Tripzone Interrupt*/
+    .long     EPWM7_TZ_IRQHandler               /* 87: EPWM7 Tripzone Interrupt*/
+    .long     0                                 /* 88: Reserved*/
+    .long     XINT1_IRQHandler                  /* 89:*/
+    .long     XINT2_IRQHandler                  /* 90:*/
+    .long     XINT3_IRQHandler                  /* 91:*/
+    .long     XINT4_IRQHandler                  /* 92:*/
+    .long     XINT5_IRQHandler                  /* 93:*/
+    .long     0                                 /* 94: Reserved*/
+    .long     0                                 /* 95: Reserved*/
+    .long     0                                 /* 96: Reserved*/
+    .long     ECAP1_IRQHandler                  /* 97:*/
+    .long     ECAP2_IRQHandler                  /* 98:*/
+    .long     ECAP3_IRQHandler                  /* 99:*/
+    .long     CAN1_TX_IRQHandler                /* 100: CAN1 TX*/
+    .long     CAN1_RX0_IRQHandler               /* 101: CAN1 RX0*/
+    .long     CAN1_RX1_IRQHandler               /* 102: CAN1 RX1*/
+    .long     CAN1_SCE_IRQHandler               /* 103: CAN1 SCE*/
+    .long     0                                 /* 104: Reserved*/
+    .long     0                                 /* 105: Reserved*/
+    .long     EQEP1_IRQHandler                  /* 106:*/
+    .long     EQEP2_IRQHandler                  /* 107:*/
+    .long     PTMR1_IRQHandler                  /* 108:TIM1*/
+    .long     PTMR2_IRQHandler                  /* 109:TIM2*/
+    .long     PTMR3_IRQHandler                  /* 110:TIM3*/
+    .long     PTMR4_IRQHandler                  /* 111:TIM4*/
+    .long     SDFM1_IRQHandler                  /* 112: */
+    .long     SDFM1_DR0_IRQHandler              /* 113: */
+    .long     SDFM1_DR1_IRQHandler              /* 114: */
+    .long     SDFM1_DR2_IRQHandler              /* 115: */
+    .long     SDFM1_DR3_IRQHandler              /* 116: */
+    .long     SDFM2_IRQHandler                  /* 117: */
+    .long     SDFM2_DR0_IRQHandler              /* 118: */
+    .long     SDFM2_DR1_IRQHandler              /* 119: */
+    .long     SDFM2_DR2_IRQHandler              /* 120: */
+    .long     SDFM2_DR3_IRQHandler              /* 121: */
+    .long     DCC1_IRQHandler                   /* 122:*/
+    .long     DCC2_IRQHandler                   /* 123:*/
+    .long     FLASHECC_IRQHandler               /* 124: */
+    .long   DefaultISR                                      /* 140*/
+    .long   DefaultISR                                      /* 141*/
+    .long   DefaultISR                                      /* 142*/
+    .long   DefaultISR                                      /* 143*/
+    .long   DefaultISR                                      /* 144*/
+    .long   DefaultISR                                      /* 145*/
+    .long   DefaultISR                                      /* 146*/
+    .long   DefaultISR                                      /* 147*/
+    .long   DefaultISR                                      /* 148*/
+    .long   DefaultISR                                      /* 149*/
+    .long   DefaultISR                                      /* 150*/
+    .long   DefaultISR                                      /* 151*/
+    .long   DefaultISR                                      /* 152*/
+    .long   DefaultISR                                      /* 153*/
+    .long   DefaultISR                                      /* 154*/
+    .long   DefaultISR                                      /* 155*/
+    .long   DefaultISR                                      /* 156*/
+    .long   DefaultISR                                      /* 157*/
+    .long   DefaultISR                                      /* 158*/
+    .long   DefaultISR                                      /* 159*/
+    .long   DefaultISR                                      /* 160*/
+    .long   DefaultISR                                      /* 161*/
+    .long   DefaultISR                                      /* 162*/
+    .long   DefaultISR                                      /* 163*/
+    .long   DefaultISR                                      /* 164*/
+    .long   DefaultISR                                      /* 165*/
+    .long   DefaultISR                                      /* 166*/
+    .long   DefaultISR                                      /* 167*/
+    .long   DefaultISR                                      /* 168*/
+    .long   DefaultISR                                      /* 169*/
+    .long   DefaultISR                                      /* 170*/
+    .long   DefaultISR                                      /* 171*/
+    .long   DefaultISR                                      /* 172*/
+    .long   DefaultISR                                      /* 173*/
+    .long   DefaultISR                                      /* 174*/
+    .long   DefaultISR                                      /* 175*/
+    .long   DefaultISR                                      /* 176*/
+    .long   DefaultISR                                      /* 177*/
+    .long   DefaultISR                                      /* 178*/
+    .long   DefaultISR                                      /* 179*/
+    .long   DefaultISR                                      /* 180*/
+    .long   DefaultISR                                      /* 181*/
+    .long   DefaultISR                                      /* 182*/
+    .long   DefaultISR                                      /* 183*/
+    .long   DefaultISR                                      /* 184*/
+    .long   DefaultISR                                      /* 185*/
+    .long   DefaultISR                                      /* 186*/
+    .long   DefaultISR                                      /* 187*/
+    .long   DefaultISR                                      /* 188*/
+    .long   DefaultISR                                      /* 189*/
+    .long   DefaultISR                                      /* 190*/
+    .long   DefaultISR                                      /* 191*/
+    .long   DefaultISR                                      /* 192*/
+    .long   DefaultISR                                      /* 193*/
+    .long   DefaultISR                                      /* 194*/
+    .long   DefaultISR                                      /* 195*/
+    .long   DefaultISR                                      /* 196*/
+    .long   DefaultISR                                      /* 197*/
+    .long   DefaultISR                                      /* 198*/
+    .long   DefaultISR                                      /* 199*/
+    .long   DefaultISR                                      /* 200*/
+    .long   DefaultISR                                      /* 201*/
+    .long   DefaultISR                                      /* 202*/
+    .long   DefaultISR                                      /* 203*/
+    .long   DefaultISR                                      /* 204*/
+    .long   DefaultISR                                      /* 205*/
+    .long   DefaultISR                                      /* 206*/
+    .long   DefaultISR                                      /* 207*/
+    .long   DefaultISR                                      /* 208*/
+    .long   DefaultISR                                      /* 209*/
+    .long   DefaultISR                                      /* 210*/
+    .long   DefaultISR                                      /* 211*/
+    .long   DefaultISR                                      /* 212*/
+    .long   DefaultISR                                      /* 213*/
+    .long   DefaultISR                                      /* 214*/
+    .long   DefaultISR                                      /* 215*/
+    .long   DefaultISR                                      /* 216*/
+    .long   DefaultISR                                      /* 217*/
+    .long   DefaultISR                                      /* 218*/
+    .long   DefaultISR                                      /* 219*/
+    .long   DefaultISR                                      /* 220*/
+    .long   DefaultISR                                      /* 221*/
+    .long   DefaultISR                                      /* 222*/
+    .long   DefaultISR                                      /* 223*/
+    .long   DefaultISR                                      /* 224*/
+    .long   DefaultISR                                      /* 225*/
+    .long   DefaultISR                                      /* 226*/
+    .long   DefaultISR                                      /* 227*/
+    .long   DefaultISR                                      /* 228*/
+    .long   DefaultISR                                      /* 229*/
+    .long   DefaultISR                                      /* 230*/
+    .long   DefaultISR                                      /* 231*/
+    .long   DefaultISR                                      /* 232*/
+    .long   DefaultISR                                      /* 233*/
+    .long   DefaultISR                                      /* 234*/
+    .long   DefaultISR                                      /* 235*/
+    .long   DefaultISR                                      /* 236*/
+    .long   DefaultISR                                      /* 237*/
+    .long   DefaultISR                                      /* 238*/
+    .long   DefaultISR                                      /* 239*/
+    .long   DefaultISR                                      /* 240*/
+    .long   DefaultISR                                      /* 241*/
+    .long   DefaultISR                                      /* 242*/
+    .long   DefaultISR                                      /* 243*/
+    .long   DefaultISR                                      /* 244*/
+    .long   DefaultISR                                      /* 245*/
+    .long   DefaultISR                                      /* 246*/
+    .long   DefaultISR                                      /* 247*/
+    .long   DefaultISR                                      /* 248*/
+    .long   DefaultISR                                      /* 249*/
+    .long   DefaultISR                                      /* 250*/
+    .long   DefaultISR                                      /* 251*/
+    .long   DefaultISR                                      /* 252*/
+    .long   DefaultISR                                      /* 253*/
+    .long   DefaultISR                                      /* 254*/
+    .long   0xFFFFFFFF                                      /*  Reserved for user TRIM value*/
+
+    .size    __isr_vector, . - __isr_vector
+
+    .text
     .thumb
 
-.word __data_flash_start__
-.word __data_start__
-.word __data_end__
-.word __bss_start__
-.word __bss_end__
-.word __default_stack__
+/* Reset Handler */
 
-/*!< Reset_Handler */
-    .section .text.Reset_Handler
-    .weak Reset_Handler
-    .type Reset_Handler, %function
+    .thumb_func
+    .align 2
+    .globl   Reset_Handler
+    .weak    Reset_Handler
+    .type    Reset_Handler, %function
 Reset_Handler:
-    ldr r0, =__data_start__
-    ldr r1, =__data_end__
-    ldr r2, =__data_flash_start__
-    movs r3, #0
-    b l_loop_copy_data_sections
-
-l_copy_data_sections:
-    ldr r4, [r2, r3]
-    str r4, [r0, r3]
-    adds r3, r3, #4
-
-l_loop_copy_data_sections:
-    adds r4, r0, r3
-    cmp r4, r1
-    bcc l_copy_data_sections
-
-    ldr r2, = __bss_start__
-    ldr r4, = __bss_end__
-    movs r3, #0
-    b l_loop_clear_bss
-
-l_clear_bss:
-    str  r3, [r2]
-    adds r2, r2, #4
-
-l_loop_clear_bss:
-    cmp r2, r4
-    bcc l_clear_bss
-
+    cpsid   i               /* Mask interrupts */
+#ifndef __NO_SYSTEM_INIT
     bl SystemInit
-    bl __libc_init_array
-    bl main
-    bx lr
-
-    .size Reset_Handler, .-Reset_Handler
-
-/*!< Default_Handler */
-    .section .text.Default_Handler,"ax",%progbits
-    .weak Default_Handler
-    .type Default_Handler, %function
-Default_Handler:
-    b .
-
-    .size Default_Handler, .-Default_Handler
-
-/*!< Default_Handler */
-    .section .isr_vector,"a",%progbits
-    .type g_apm32_vectors, %object
-    .size g_apm32_vectors, .-g_apm32_vectors
-g_apm32_vectors:
-    .word __default_stack__            /*!< Top of Stack */
-    .word Reset_Handler                 /*!< -15, Reset Handler */
-    .word NMI_Handler                   /*!< -14, NMI Handler */
-    .word HardFault_Handler             /*!< -13, Hard Fault Handler */
-    .word MemManage_Handler             /*!< -12, MPU Fault Handler */
-    .word BusFault_Handler              /*!< -11, Bus Fault Handler */
-    .word UsageFault_Handler            /*!< -10, Usage Fault Handler */
-    .word 0                             /*!< -9, Reserved */
-    .word 0                             /*!< -8, Reserved */
-    .word 0                             /*!< -7, Reserved */
-    .word 0                             /*!< -6, Reserved */
-    .word SVC_Handler                   /*!< -5, SVCall Handler */
-    .word DebugMon_Handler              /*!< -4, Debug Monitor Handler */
-    .word 0                             /*!< -3, Reserved */
-    .word PendSV_Handler                /*!< -2, PendSV Handler */
-    .word SysTick_Handler               /*!< -1, SysTick Handler */
-{%- if info.class == "APM32F10X_MD" %}
-    .word WWDT_IRQHandler               /*!< 0, Window Watchdog */
-    .word PVD_IRQHandler                /*!< 1, PVD through EINT Line detect */
-    .word TAMPER_IRQHandler             /*!< 2, Tamper */
-    .word RTC_IRQHandler                /*!< 3, RTC */
-    .word FLASH_IRQHandler              /*!< 4, Flash */
-    .word RCM_IRQHandler                /*!< 5, RCM */
-    .word EINT0_IRQHandler              /*!< 6, EINT Line 0 */
-    .word EINT1_IRQHandler              /*!< 7, EINT Line 1 */
-    .word EINT2_IRQHandler              /*!< 8, EINT Line 2 */
-    .word EINT3_IRQHandler              /*!< 9, EINT Line 3 */
-    .word EINT4_IRQHandler              /*!< 10, EINT Line 4 */
-    .word DMA1_Channel1_IRQHandler      /*!< 11, DMA1 Channel 1 */
-    .word DMA1_Channel2_IRQHandler      /*!< 12, DMA1 Channel 2 */
-    .word DMA1_Channel3_IRQHandler      /*!< 13, DMA1 Channel 3 */
-    .word DMA1_Channel4_IRQHandler      /*!< 14, DMA1 Channel 4 */
-    .word DMA1_Channel5_IRQHandler      /*!< 15, DMA1 Channel 5 */
-    .word DMA1_Channel6_IRQHandler      /*!< 16, DMA1 Channel 6 */
-    .word DMA1_Channel7_IRQHandler      /*!< 17, DMA1 Channel 7 */
-    .word ADC1_2_IRQHandler             /*!< 18, ADC1_2 */
-    .word USBD1_HP_CAN1_TX_IRQHandler   /*!< 19, USBD1 High Priority or CAN1 TX */
-    .word USBD1_LP_CAN1_RX0_IRQHandler  /*!< 20, USBD1 Low  Priority or CAN1 RX0 */
-    .word CAN1_RX1_IRQHandler           /*!< 21, CAN1 RX1 */
-    .word CAN1_SCE_IRQHandler           /*!< 22, CAN1 SCE */
-    .word EINT9_5_IRQHandler            /*!< 23, EINT Line 9..5 */
-    .word TMR1_BRK_IRQHandler           /*!< 24, TMR1 Break */
-    .word TMR1_UP_IRQHandler            /*!< 25, TMR1 Update */
-    .word TMR1_TRG_COM_IRQHandler       /*!< 26, TMR1 Trigger and Commutation */
-    .word TMR1_CC_IRQHandler            /*!< 27, TMR1 Capture Compare */
-    .word TMR2_IRQHandler               /*!< 28, TMR2 */
-    .word TMR3_IRQHandler               /*!< 29, TMR3 */
-    .word TMR4_IRQHandler               /*!< 30, TMR4 */
-    .word I2C1_EV_IRQHandler            /*!< 31, I2C1 Event */
-    .word I2C1_ER_IRQHandler            /*!< 32, I2C1 Error */
-    .word I2C2_EV_IRQHandler            /*!< 33, I2C2 Event */
-    .word I2C2_ER_IRQHandler            /*!< 34, I2C2 Error */
-    .word SPI1_IRQHandler               /*!< 35, SPI1 */
-    .word SPI2_IRQHandler               /*!< 36, SPI2 */
-    .word USART1_IRQHandler             /*!< 37, USART1 */
-    .word USART2_IRQHandler             /*!< 38, USART2 */
-    .word USART3_IRQHandler             /*!< 39, USART3 */
-    .word EINT15_10_IRQHandler          /*!< 40, EINT Line 15..10 */
-    .word RTC_Alarm_IRQHandler          /*!< 41, RTC Alarm through EINT Line */
-    .word USBDWakeUp_IRQHandler         /*!< 42, USBD Wakeup from suspend */
-    .word FPU_IRQHandler                /*!< 43, FPU */
-    .word QSPI_IRQHandler               /*!< 44, QSPI */
-    .word USBD2_HP_IRQHandler           /*!< 45, USBD2 High Priority */
-    .word USBD2_LP_IRQHandler           /*!< 46, USBD2 Low Priority */
-{%- elif info.class == "APM32F10X_HD" %}
-    .word WWDT_IRQHandler               /*!< 0, Window Watchdog */
-    .word PVD_IRQHandler                /*!< 1, PVD through EINT Line detect */
-    .word TAMPER_IRQHandler             /*!< 2, Tamper */
-    .word RTC_IRQHandler                /*!< 3, RTC */
-    .word FLASH_IRQHandler              /*!< 4, Flash */
-    .word RCM_IRQHandler                /*!< 5, RCM */
-    .word EINT0_IRQHandler              /*!< 6, EINT Line 0 */
-    .word EINT1_IRQHandler              /*!< 7, EINT Line 1 */
-    .word EINT2_IRQHandler              /*!< 8, EINT Line 2 */
-    .word EINT3_IRQHandler              /*!< 9, EINT Line 3 */
-    .word EINT4_IRQHandler              /*!< 10, EINT Line 4 */
-    .word DMA1_Channel1_IRQHandler      /*!< 11, DMA1 Channel 1 */
-    .word DMA1_Channel2_IRQHandler      /*!< 12, DMA1 Channel 2 */
-    .word DMA1_Channel3_IRQHandler      /*!< 13, DMA1 Channel 3 */
-    .word DMA1_Channel4_IRQHandler      /*!< 14, DMA1 Channel 4 */
-    .word DMA1_Channel5_IRQHandler      /*!< 15, DMA1 Channel 5 */
-    .word DMA1_Channel6_IRQHandler      /*!< 16, DMA1 Channel 6 */
-    .word DMA1_Channel7_IRQHandler      /*!< 17, DMA1 Channel 7 */
-    .word ADC1_2_IRQHandler             /*!< 18, ADC1 & ADC2 */
-    .word USBD1_HP_CAN1_TX_IRQHandler   /*!< 19, USBD1 High Priority or CAN1 TX */
-    .word USBD1_LP_CAN1_RX0_IRQHandler  /*!< 20, USBD1 Low  Priority or CAN1 RX0 */
-    .word CAN1_RX1_IRQHandler           /*!< 21, CAN1 RX1 */
-    .word CAN1_SCE_IRQHandler           /*!< 22, CAN1 SCE */
-    .word EINT9_5_IRQHandler            /*!< 23, EINT Line 9..5 */
-    .word TMR1_BRK_IRQHandler           /*!< 24, TMR1 Break */
-    .word TMR1_UP_IRQHandler            /*!< 25, TMR1 Update */
-    .word TMR1_TRG_COM_IRQHandler       /*!< 26, TMR1 Trigger and Commutation */
-    .word TMR1_CC_IRQHandler            /*!< 27, TMR1 Capture Compare */
-    .word TMR2_IRQHandler               /*!< 28, TMR2 */
-    .word TMR3_IRQHandler               /*!< 29, TMR3 */
-    .word TMR4_IRQHandler               /*!< 30, TMR4 */
-    .word I2C1_EV_IRQHandler            /*!< 31, I2C1 Event */
-    .word I2C1_ER_IRQHandler            /*!< 32, I2C1 Error */
-    .word I2C2_EV_IRQHandler            /*!< 33, I2C2 Event */
-    .word I2C2_ER_IRQHandler            /*!< 34, I2C2 Error */
-    .word SPI1_IRQHandler               /*!< 35, SPI1 */
-    .word SPI2_IRQHandler               /*!< 36, SPI2 */
-    .word USART1_IRQHandler             /*!< 37, USART1 */
-    .word USART2_IRQHandler             /*!< 38, USART2 */
-    .word USART3_IRQHandler             /*!< 39, USART3 */
-    .word EINT15_10_IRQHandler          /*!< 40, EINT Line 15..10 */
-    .word RTC_Alarm_IRQHandler          /*!< 41, RTC Alarm through EINT Line */
-    .word USBDWakeUp_IRQHandler         /*!< 42, USBD Wakeup from suspend */
-    .word TMR8_BRK_IRQHandler           /*!< 43, TMR8 Break */
-    .word TMR8_UP_IRQHandler            /*!< 44, TMR8 Update */
-    .word TMR8_TRG_COM_IRQHandler       /*!< 45, TMR8 Trigger and Commutation */
-    .word TMR8_CC_IRQHandler            /*!< 46, TMR8 Capture Compare */
-    .word ADC3_IRQHandler               /*!< 47, ADC3 */
-    .word FSMC_IRQHandler               /*!< 48, EMMC */
-    .word SDIO_IRQHandler               /*!< 49, SDIO */
-    .word TMR5_IRQHandler               /*!< 50, TMR5 */
-    .word SPI3_IRQHandler               /*!< 51, SPI3 */
-    .word UART4_IRQHandler              /*!< 52, UART4 */
-    .word UART5_IRQHandler              /*!< 53, UART5 */
-    .word TMR6_IRQHandler               /*!< 54, TMR6 */
-    .word TMR7_IRQHandler               /*!< 55, TMR7 */
-    .word DMA2_Channel1_IRQHandler      /*!< 56, DMA2 Channel1 */
-    .word DMA2_Channel2_IRQHandler      /*!< 57, DMA2 Channel2 */
-    .word DMA2_Channel3_IRQHandler      /*!< 58, DMA2 Channel3 */
-    .word DMA2_Channel4_5_IRQHandler    /*!< 59, DMA2 Channel4 & Channel5 */
-    .word 0                             /*!< 60, Reserved */
-    .word USBD2_HP_CAN2_TX_IRQHandler   /*!< 61, USBD2 High Priority or CAN2 TX */
-    .word USBD2_LP_CAN2_RX0_IRQHandler  /*!< 62, USBD2 Low Priority or CAN2 RX0 */
-    .word CAN2_RX1_IRQHandler           /*!< 63, CAN2 RX1 */
-    .word CAN2_SCE_IRQHandler           /*!< 64, CAN2 SCE */
-{%- elif info.class == "APM32F10X_CL" %}
-    .word WWDT_IRQHandler               /*!< 0, Window Watchdog */
-    .word PVD_IRQHandler                /*!< 1, PVD through EINT Line detect */
-    .word TAMPER_IRQHandler             /*!< 2, Tamper */
-    .word RTC_IRQHandler                /*!< 3, RTC */
-    .word FLASH_IRQHandler              /*!< 4, Flash */
-    .word RCM_IRQHandler                /*!< 5, RCM */
-    .word EINT0_IRQHandler              /*!< 6, EINT Line 0 */
-    .word EINT1_IRQHandler              /*!< 7, EINT Line 1 */
-    .word EINT2_IRQHandler              /*!< 8, EINT Line 2 */
-    .word EINT3_IRQHandler              /*!< 9, EINT Line 3 */
-    .word EINT4_IRQHandler              /*!< 10, EINT Line 4 */
-    .word DMA1_Channel1_IRQHandler      /*!< 11, DMA1 Channel 1 */
-    .word DMA1_Channel2_IRQHandler      /*!< 12, DMA1 Channel 2 */
-    .word DMA1_Channel3_IRQHandler      /*!< 13, DMA1 Channel 3 */
-    .word DMA1_Channel4_IRQHandler      /*!< 14, DMA1 Channel 4 */
-    .word DMA1_Channel5_IRQHandler      /*!< 15, DMA1 Channel 5 */
-    .word DMA1_Channel6_IRQHandler      /*!< 16, DMA1 Channel 6 */
-    .word DMA1_Channel7_IRQHandler      /*!< 17, DMA1 Channel 7 */
-    .word ADC1_2_IRQHandler             /*!< 18, ADC1 & ADC2 */
-    .word CAN1_TX_IRQHandler            /*!< 19, CAN1 TX */
-    .word CAN1_RX0_IRQHandler           /*!< 20, CAN1 RX0 */
-    .word CAN1_RX1_IRQHandler           /*!< 21, CAN1 RX1 */
-    .word CAN1_SCE_IRQHandler           /*!< 22, CAN1 SCE */
-    .word EINT9_5_IRQHandler            /*!< 23, EINT Line 9..5 */
-    .word TMR1_BRK_IRQHandler           /*!< 24, TMR1 Break */
-    .word TMR1_UP_IRQHandler            /*!< 25, TMR1 Update */
-    .word TMR1_TRG_COM_IRQHandler       /*!< 26, TMR1 Trigger and Commutation */
-    .word TMR1_CC_IRQHandler            /*!< 27, TMR1 Capture Compare */
-    .word TMR2_IRQHandler               /*!< 28, TMR2 */
-    .word TMR3_IRQHandler               /*!< 29, TMR3 */
-    .word TMR4_IRQHandler               /*!< 30, TMR4 */
-    .word I2C1_EV_IRQHandler            /*!< 31, I2C1 Event */
-    .word I2C1_ER_IRQHandler            /*!< 32, I2C1 Error */
-    .word I2C2_EV_IRQHandler            /*!< 33, I2C2 Event */
-    .word I2C2_ER_IRQHandler            /*!< 34, I2C2 Error */
-    .word SPI1_IRQHandler               /*!< 35, SPI1 */
-    .word SPI2_IRQHandler               /*!< 36, SPI2 */
-    .word USART1_IRQHandler             /*!< 37, USART1 */
-    .word USART2_IRQHandler             /*!< 38, USART2 */
-    .word USART3_IRQHandler             /*!< 39, USART3 */
-    .word EINT15_10_IRQHandler          /*!< 40, EINT Line 15..10 */
-    .word RTC_Alarm_IRQHandler          /*!< 41, RTC Alarm through EINT Line */
-    .word OTG_FS_WKUP_IRQHandler        /*!< 42, USBD Wakeup from suspend */
-    .word 0                             /*!< 43, Reserved */
-    .word 0                             /*!< 44, Reserved */
-    .word 0                             /*!< 45, Reserved */
-    .word 0                             /*!< 46, Reserved */
-    .word 0                             /*!< 47, Reserved */
-    .word 0                             /*!< 48, Reserved */
-    .word 0                             /*!< 49, Reserved */
-    .word TMR5_IRQHandler               /*!< 50, TMR5 */
-    .word SPI3_IRQHandler               /*!< 51, SPI3 */
-    .word UART4_IRQHandler              /*!< 52, UART4 */
-    .word UART5_IRQHandler              /*!< 53, UART5 */
-    .word TMR6_IRQHandler               /*!< 54, TMR6 */
-    .word TMR7_IRQHandler               /*!< 55, TMR7 */
-    .word DMA2_Channel1_IRQHandler      /*!< 56, DMA2 Channel1 */
-    .word DMA2_Channel2_IRQHandler      /*!< 57, DMA2 Channel2 */
-    .word DMA2_Channel3_IRQHandler      /*!< 58, DMA2 Channel3 */
-    .word DMA2_Channel4_IRQHandler      /*!< 59, DMA2 Channel4 */
-    .word DMA2_Channel5_IRQHandler      /*!< 60, DMA2 Channel5 */
-    .word ETH_IRQHandler                /*!< 61, ETH */
-    .word ETH_WKUP_IRQHandler           /*!< 62, ETH Wake up */
-    .word CAN2_TX_IRQHandler            /*!< 63, CAN2 TX */
-    .word CAN2_RX0_IRQHandler           /*!< 64, CAN2 RX0 */
-    .word CAN2_RX1_IRQHandler           /*!< 65, CAN2 RX1 */
-    .word CAN2_SCE_IRQHandler           /*!< 66, CAN2 SCE */
-    .word OTG_FS_IRQHandler             /*!< 67, OTG FS */
-{%- endif %}
-{# #}
-    .weak NMI_Handler
-    .thumb_set NMI_Handler,Default_Handler
-
-    .weak HardFault_Handler
-    .thumb_set HardFault_Handler,Default_Handler
-
-    .weak MemManage_Handler
-    .thumb_set MemManage_Handler,Default_Handler
-
-    .weak BusFault_Handler
-    .thumb_set BusFault_Handler,Default_Handler
-
-    .weak UsageFault_Handler
-    .thumb_set UsageFault_Handler,Default_Handler
-
-    .weak SVC_Handler
-    .thumb_set SVC_Handler,Default_Handler
-
-    .weak DebugMon_Handler
-    .thumb_set DebugMon_Handler,Default_Handler
-
-    .weak PendSV_Handler
-    .thumb_set PendSV_Handler,Default_Handler
-
-    .weak SysTick_Handler
-    .thumb_set SysTick_Handler,Default_Handler
-{# #}
-{%- if info.class == "APM32F10X_MD" %}
-    .weak WWDT_IRQHandler
-    .thumb_set WWDT_IRQHandler,Default_Handler
-
-    .weak PVD_IRQHandler
-    .thumb_set PVD_IRQHandler,Default_Handler
-
-    .weak TAMPER_IRQHandler
-    .thumb_set TAMPER_IRQHandler,Default_Handler
-
-    .weak RTC_IRQHandler
-    .thumb_set RTC_IRQHandler,Default_Handler
-
-    .weak FLASH_IRQHandler
-    .thumb_set FLASH_IRQHandler,Default_Handler
-
-    .weak RCM_IRQHandler
-    .thumb_set RCM_IRQHandler,Default_Handler
-
-    .weak EINT0_IRQHandler
-    .thumb_set EINT0_IRQHandler,Default_Handler
-
-    .weak EINT1_IRQHandler
-    .thumb_set EINT1_IRQHandler,Default_Handler
-
-    .weak EINT2_IRQHandler
-    .thumb_set EINT2_IRQHandler,Default_Handler
-
-    .weak EINT3_IRQHandler
-    .thumb_set EINT3_IRQHandler,Default_Handler
-
-    .weak EINT4_IRQHandler
-    .thumb_set EINT4_IRQHandler,Default_Handler
-
-    .weak DMA1_Channel1_IRQHandler
-    .thumb_set DMA1_Channel1_IRQHandler,Default_Handler
-
-    .weak DMA1_Channel2_IRQHandler
-    .thumb_set DMA1_Channel2_IRQHandler,Default_Handler
-
-    .weak DMA1_Channel3_IRQHandler
-    .thumb_set DMA1_Channel3_IRQHandler,Default_Handler
-
-    .weak DMA1_Channel4_IRQHandler
-    .thumb_set DMA1_Channel4_IRQHandler,Default_Handler
-
-    .weak DMA1_Channel5_IRQHandler
-    .thumb_set DMA1_Channel5_IRQHandler,Default_Handler
-
-    .weak DMA1_Channel6_IRQHandler
-    .thumb_set DMA1_Channel6_IRQHandler,Default_Handler
-
-    .weak DMA1_Channel7_IRQHandler
-    .thumb_set DMA1_Channel7_IRQHandler,Default_Handler
-
-    .weak ADC1_2_IRQHandler
-    .thumb_set ADC1_2_IRQHandler,Default_Handler
-
-    .weak USBD1_HP_CAN1_TX_IRQHandler
-    .thumb_set USBD1_HP_CAN1_TX_IRQHandler,Default_Handler
-
-    .weak USBD1_LP_CAN1_RX0_IRQHandler
-    .thumb_set USBD1_LP_CAN1_RX0_IRQHandler,Default_Handler
-
-    .weak CAN1_RX1_IRQHandler
-    .thumb_set CAN1_RX1_IRQHandler,Default_Handler
-
-    .weak CAN1_SCE_IRQHandler
-    .thumb_set CAN1_SCE_IRQHandler,Default_Handler
-
-    .weak EINT9_5_IRQHandler
-    .thumb_set EINT9_5_IRQHandler,Default_Handler
-
-    .weak TMR1_BRK_IRQHandler
-    .thumb_set TMR1_BRK_IRQHandler,Default_Handler
-
-    .weak TMR1_UP_IRQHandler
-    .thumb_set TMR1_UP_IRQHandler,Default_Handler
-
-    .weak TMR1_TRG_COM_IRQHandler
-    .thumb_set TMR1_TRG_COM_IRQHandler,Default_Handler
-
-    .weak TMR1_CC_IRQHandler
-    .thumb_set TMR1_CC_IRQHandler,Default_Handler
-
-    .weak TMR2_IRQHandler
-    .thumb_set TMR2_IRQHandler,Default_Handler
-
-    .weak TMR3_IRQHandler
-    .thumb_set TMR3_IRQHandler,Default_Handler
-
-    .weak TMR4_IRQHandler
-    .thumb_set TMR4_IRQHandler,Default_Handler
-
-    .weak I2C1_EV_IRQHandler
-    .thumb_set I2C1_EV_IRQHandler,Default_Handler
-
-    .weak I2C1_ER_IRQHandler
-    .thumb_set I2C1_ER_IRQHandler,Default_Handler
-
-    .weak I2C2_EV_IRQHandler
-    .thumb_set I2C2_EV_IRQHandler,Default_Handler
-
-    .weak I2C2_ER_IRQHandler
-    .thumb_set I2C2_ER_IRQHandler,Default_Handler
-
-    .weak SPI1_IRQHandler
-    .thumb_set SPI1_IRQHandler,Default_Handler
-
-    .weak SPI2_IRQHandler
-    .thumb_set SPI2_IRQHandler,Default_Handler
-
-    .weak USART1_IRQHandler
-    .thumb_set USART1_IRQHandler,Default_Handler
-
-    .weak USART2_IRQHandler
-    .thumb_set USART2_IRQHandler,Default_Handler
-
-    .weak USART3_IRQHandler
-    .thumb_set USART3_IRQHandler,Default_Handler
-
-    .weak EINT15_10_IRQHandler
-    .thumb_set EINT15_10_IRQHandler,Default_Handler
-
-    .weak RTC_Alarm_IRQHandler
-    .thumb_set RTC_Alarm_IRQHandler,Default_Handler
-
-    .weak USBDWakeUp_IRQHandler
-    .thumb_set USBDWakeUp_IRQHandler,Default_Handler
-
-    .weak FPU_IRQHandler
-    .thumb_set FPU_IRQHandler,Default_Handler
-
-    .weak QSPI_IRQHandler
-    .thumb_set QSPI_IRQHandler,Default_Handler
-
-    .weak USBD2_HP_IRQHandler
-    .thumb_set USBD2_HP_IRQHandler,Default_Handler
-
-    .weak USBD2_LP_IRQHandler
-    .thumb_set USBD2_LP_IRQHandler,Default_Handler
-{%- elif info.class == "APM32F10X_HD" %}
-    .weak WWDT_IRQHandler
-    .thumb_set WWDT_IRQHandler,Default_Handler
-
-    .weak PVD_IRQHandler
-    .thumb_set PVD_IRQHandler,Default_Handler
-
-    .weak TAMPER_IRQHandler
-    .thumb_set TAMPER_IRQHandler,Default_Handler
-
-    .weak RTC_IRQHandler
-    .thumb_set RTC_IRQHandler,Default_Handler
-
-    .weak FLASH_IRQHandler
-    .thumb_set FLASH_IRQHandler,Default_Handler
-
-    .weak RCM_IRQHandler
-    .thumb_set RCM_IRQHandler,Default_Handler
-
-    .weak EINT0_IRQHandler
-    .thumb_set EINT0_IRQHandler,Default_Handler
-
-    .weak EINT1_IRQHandler
-    .thumb_set EINT1_IRQHandler,Default_Handler
-
-    .weak EINT2_IRQHandler
-    .thumb_set EINT2_IRQHandler,Default_Handler
-
-    .weak EINT3_IRQHandler
-    .thumb_set EINT3_IRQHandler,Default_Handler
-
-    .weak EINT4_IRQHandler
-    .thumb_set EINT4_IRQHandler,Default_Handler
-
-    .weak DMA1_Channel1_IRQHandler
-    .thumb_set DMA1_Channel1_IRQHandler,Default_Handler
-
-    .weak DMA1_Channel2_IRQHandler
-    .thumb_set DMA1_Channel2_IRQHandler,Default_Handler
-
-    .weak DMA1_Channel3_IRQHandler
-    .thumb_set DMA1_Channel3_IRQHandler,Default_Handler
-
-    .weak DMA1_Channel4_IRQHandler
-    .thumb_set DMA1_Channel4_IRQHandler,Default_Handler
-
-    .weak DMA1_Channel5_IRQHandler
-    .thumb_set DMA1_Channel5_IRQHandler,Default_Handler
-
-    .weak DMA1_Channel6_IRQHandler
-    .thumb_set DMA1_Channel6_IRQHandler,Default_Handler
-
-    .weak DMA1_Channel7_IRQHandler
-    .thumb_set DMA1_Channel7_IRQHandler,Default_Handler
-
-    .weak ADC1_2_IRQHandler
-    .thumb_set ADC1_2_IRQHandler,Default_Handler
-
-    .weak USBD1_HP_CAN1_TX_IRQHandler
-    .thumb_set USBD1_HP_CAN1_TX_IRQHandler,Default_Handler
-
-    .weak USBD1_LP_CAN1_RX0_IRQHandler
-    .thumb_set USBD1_LP_CAN1_RX0_IRQHandler,Default_Handler
-
-    .weak CAN1_RX1_IRQHandler
-    .thumb_set CAN1_RX1_IRQHandler,Default_Handler
-
-    .weak CAN1_SCE_IRQHandler
-    .thumb_set CAN1_SCE_IRQHandler,Default_Handler
-
-    .weak EINT9_5_IRQHandler
-    .thumb_set EINT9_5_IRQHandler,Default_Handler
-
-    .weak TMR1_BRK_IRQHandler
-    .thumb_set TMR1_BRK_IRQHandler,Default_Handler
-
-    .weak TMR1_UP_IRQHandler
-    .thumb_set TMR1_UP_IRQHandler,Default_Handler
-
-    .weak TMR1_TRG_COM_IRQHandler
-    .thumb_set TMR1_TRG_COM_IRQHandler,Default_Handler
-
-    .weak TMR1_CC_IRQHandler
-    .thumb_set TMR1_CC_IRQHandler,Default_Handler
-
-    .weak TMR2_IRQHandler
-    .thumb_set TMR2_IRQHandler,Default_Handler
-
-    .weak TMR3_IRQHandler
-    .thumb_set TMR3_IRQHandler,Default_Handler
-
-    .weak TMR4_IRQHandler
-    .thumb_set TMR4_IRQHandler,Default_Handler
-
-    .weak I2C1_EV_IRQHandler
-    .thumb_set I2C1_EV_IRQHandler,Default_Handler
-
-    .weak I2C1_ER_IRQHandler
-    .thumb_set I2C1_ER_IRQHandler,Default_Handler
-
-    .weak I2C2_EV_IRQHandler
-    .thumb_set I2C2_EV_IRQHandler,Default_Handler
-
-    .weak I2C2_ER_IRQHandler
-    .thumb_set I2C2_ER_IRQHandler,Default_Handler
-
-    .weak SPI1_IRQHandler
-    .thumb_set SPI1_IRQHandler,Default_Handler
-
-    .weak SPI2_IRQHandler
-    .thumb_set SPI2_IRQHandler,Default_Handler
-
-    .weak USART1_IRQHandler
-    .thumb_set USART1_IRQHandler,Default_Handler
-
-    .weak USART2_IRQHandler
-    .thumb_set USART2_IRQHandler,Default_Handler
-
-    .weak USART3_IRQHandler
-    .thumb_set USART3_IRQHandler,Default_Handler
-
-    .weak EINT15_10_IRQHandler
-    .thumb_set EINT15_10_IRQHandler,Default_Handler
-
-    .weak RTC_Alarm_IRQHandler
-    .thumb_set RTC_Alarm_IRQHandler,Default_Handler
-
-    .weak USBDWakeUp_IRQHandler
-    .thumb_set USBDWakeUp_IRQHandler,Default_Handler
-
-    .weak TMR8_BRK_IRQHandler
-    .thumb_set TMR8_BRK_IRQHandler,Default_Handler
-
-    .weak TMR8_UP_IRQHandler
-    .thumb_set TMR8_UP_IRQHandler,Default_Handler
-
-    .weak TMR8_TRG_COM_IRQHandler
-    .thumb_set TMR8_TRG_COM_IRQHandler,Default_Handler
-
-    .weak TMR8_CC_IRQHandler
-    .thumb_set TMR8_CC_IRQHandler,Default_Handler
-
-    .weak ADC3_IRQHandler
-    .thumb_set ADC3_IRQHandler,Default_Handler
-
-    .weak FSMC_IRQHandler
-    .thumb_set FSMC_IRQHandler,Default_Handler
-
-    .weak SDIO_IRQHandler
-    .thumb_set SDIO_IRQHandler,Default_Handler
-
-    .weak TMR5_IRQHandler
-    .thumb_set TMR5_IRQHandler,Default_Handler
-
-    .weak SPI3_IRQHandler
-    .thumb_set SPI3_IRQHandler,Default_Handler
-
-    .weak UART4_IRQHandler
-    .thumb_set UART4_IRQHandler,Default_Handler
-
-    .weak UART5_IRQHandler
-    .thumb_set UART5_IRQHandler,Default_Handler
-
-    .weak TMR6_IRQHandler
-    .thumb_set TMR6_IRQHandler,Default_Handler
-
-    .weak TMR7_IRQHandler
-    .thumb_set TMR7_IRQHandler,Default_Handler
-
-    .weak DMA2_Channel1_IRQHandler
-    .thumb_set DMA2_Channel1_IRQHandler,Default_Handler
-
-    .weak DMA2_Channel2_IRQHandler
-    .thumb_set DMA2_Channel2_IRQHandler,Default_Handler
-
-    .weak DMA2_Channel3_IRQHandler
-    .thumb_set DMA2_Channel3_IRQHandler,Default_Handler
-
-    .weak DMA2_Channel4_5_IRQHandler
-    .thumb_set DMA2_Channel4_5_IRQHandler,Default_Handler
-
-    .weak USBD2_HP_CAN2_TX_IRQHandler
-    .thumb_set USBD2_HP_CAN2_TX_IRQHandler,Default_Handler
-
-    .weak USBD2_LP_CAN2_RX0_IRQHandler
-    .thumb_set USBD2_LP_CAN2_RX0_IRQHandler,Default_Handler
-
-    .weak CAN2_RX1_IRQHandler
-    .thumb_set CAN2_RX1_IRQHandler,Default_Handler
-
-    .weak CAN2_SCE_IRQHandler
-    .thumb_set CAN2_SCE_IRQHandler,Default_Handler
-{%- elif info.class == "APM32F10X_CL" %}
-    .weak WWDT_IRQHandler
-    .thumb_set WWDT_IRQHandler,Default_Handler
-
-    .weak PVD_IRQHandler
-    .thumb_set PVD_IRQHandler,Default_Handler
-
-    .weak TAMPER_IRQHandler
-    .thumb_set TAMPER_IRQHandler,Default_Handler
-
-    .weak RTC_IRQHandler
-    .thumb_set RTC_IRQHandler,Default_Handler
-
-    .weak FLASH_IRQHandler
-    .thumb_set FLASH_IRQHandler,Default_Handler
-
-    .weak RCM_IRQHandler
-    .thumb_set RCM_IRQHandler,Default_Handler
-
-    .weak EINT0_IRQHandler
-    .thumb_set EINT0_IRQHandler,Default_Handler
-
-    .weak EINT1_IRQHandler
-    .thumb_set EINT1_IRQHandler,Default_Handler
-
-    .weak EINT2_IRQHandler
-    .thumb_set EINT2_IRQHandler,Default_Handler
-
-    .weak EINT3_IRQHandler
-    .thumb_set EINT3_IRQHandler,Default_Handler
-
-    .weak EINT4_IRQHandler
-    .thumb_set EINT4_IRQHandler,Default_Handler
-
-    .weak DMA1_Channel1_IRQHandler
-    .thumb_set DMA1_Channel1_IRQHandler,Default_Handler
-
-    .weak DMA1_Channel2_IRQHandler
-    .thumb_set DMA1_Channel2_IRQHandler,Default_Handler
-
-    .weak DMA1_Channel3_IRQHandler
-    .thumb_set DMA1_Channel3_IRQHandler,Default_Handler
-
-    .weak DMA1_Channel4_IRQHandler
-    .thumb_set DMA1_Channel4_IRQHandler,Default_Handler
-
-    .weak DMA1_Channel5_IRQHandler
-    .thumb_set DMA1_Channel5_IRQHandler,Default_Handler
-
-    .weak DMA1_Channel6_IRQHandler
-    .thumb_set DMA1_Channel6_IRQHandler,Default_Handler
-
-    .weak DMA1_Channel7_IRQHandler
-    .thumb_set DMA1_Channel7_IRQHandler,Default_Handler
-
-    .weak ADC1_2_IRQHandler
-    .thumb_set ADC1_2_IRQHandler,Default_Handler
-
-    .weak USBD_HP_CAN1_TX_IRQHandler
-    .thumb_set USBD_HP_CAN1_TX_IRQHandler,Default_Handler
-
-    .weak USBD_LP_CAN1_RX0_IRQHandler
-    .thumb_set USBD_LP_CAN1_RX0_IRQHandler,Default_Handler
-
-    .weak CAN1_TX_IRQHandler
-    .thumb_set CAN1_TX_IRQHandler,Default_Handler
-
-    .weak CAN1_RX0_IRQHandler
-    .thumb_set CAN1_RX0_IRQHandler,Default_Handler
-
-    .weak CAN1_RX1_IRQHandler
-    .thumb_set CAN1_RX1_IRQHandler,Default_Handler
-
-    .weak CAN1_SCE_IRQHandler
-    .thumb_set CAN1_SCE_IRQHandler,Default_Handler
-
-    .weak EINT9_5_IRQHandler
-    .thumb_set EINT9_5_IRQHandler,Default_Handler
-
-    .weak TMR1_BRK_IRQHandler
-    .thumb_set TMR1_BRK_IRQHandler,Default_Handler
-
-    .weak TMR1_UP_IRQHandler
-    .thumb_set TMR1_UP_IRQHandler,Default_Handler
-
-    .weak TMR1_TRG_COM_IRQHandler
-    .thumb_set TMR1_TRG_COM_IRQHandler,Default_Handler
-
-    .weak TMR1_CC_IRQHandler
-    .thumb_set TMR1_CC_IRQHandler,Default_Handler
-
-    .weak TMR2_IRQHandler
-    .thumb_set TMR2_IRQHandler,Default_Handler
-
-    .weak TMR3_IRQHandler
-    .thumb_set TMR3_IRQHandler,Default_Handler
-
-    .weak TMR4_IRQHandler
-    .thumb_set TMR4_IRQHandler,Default_Handler
-
-    .weak I2C1_EV_IRQHandler
-    .thumb_set I2C1_EV_IRQHandler,Default_Handler
-
-    .weak I2C1_ER_IRQHandler
-    .thumb_set I2C1_ER_IRQHandler,Default_Handler
-
-    .weak I2C2_EV_IRQHandler
-    .thumb_set I2C2_EV_IRQHandler,Default_Handler
-
-    .weak I2C2_ER_IRQHandler
-    .thumb_set I2C2_ER_IRQHandler,Default_Handler
-
-    .weak SPI1_IRQHandler
-    .thumb_set SPI1_IRQHandler,Default_Handler
-
-    .weak SPI2_IRQHandler
-    .thumb_set SPI2_IRQHandler,Default_Handler
-
-    .weak USART1_IRQHandler
-    .thumb_set USART1_IRQHandler,Default_Handler
-
-    .weak USART2_IRQHandler
-    .thumb_set USART2_IRQHandler,Default_Handler
-
-    .weak USART3_IRQHandler
-    .thumb_set USART3_IRQHandler,Default_Handler
-
-    .weak EINT15_10_IRQHandler
-    .thumb_set EINT15_10_IRQHandler,Default_Handler
-
-    .weak RTC_Alarm_IRQHandler
-    .thumb_set RTC_Alarm_IRQHandler,Default_Handler
-
-    .weak OTG_FS_WKUP_IRQHandler
-    .thumb_set OTG_FS_WKUP_IRQHandler,Default_Handler
-
-    .weak TMR5_IRQHandler
-    .thumb_set TMR5_IRQHandler,Default_Handler
-
-    .weak SPI3_IRQHandler
-    .thumb_set SPI3_IRQHandler,Default_Handler
-
-    .weak UART4_IRQHandler
-    .thumb_set UART4_IRQHandler,Default_Handler
-
-    .weak UART5_IRQHandler
-    .thumb_set UART5_IRQHandler,Default_Handler
-
-    .weak TMR6_IRQHandler
-    .thumb_set TMR6_IRQHandler,Default_Handler
-
-    .weak TMR7_IRQHandler
-    .thumb_set TMR7_IRQHandler,Default_Handler
-
-    .weak DMA2_Channel1_IRQHandler
-    .thumb_set DMA2_Channel1_IRQHandler,Default_Handler
-
-    .weak DMA2_Channel2_IRQHandler
-    .thumb_set DMA2_Channel2_IRQHandler,Default_Handler
-
-    .weak DMA2_Channel3_IRQHandler
-    .thumb_set DMA2_Channel3_IRQHandler,Default_Handler
-
-    .weak DMA2_Channel4_IRQHandler
-    .thumb_set DMA2_Channel4_IRQHandler,Default_Handler
-
-    .weak DMA2_Channel5_IRQHandler
-    .thumb_set DMA2_Channel5_IRQHandler,Default_Handler
-
-    .weak ETH_IRQHandler
-    .thumb_set ETH_IRQHandler,Default_Handler
-
-    .weak ETH_WKUP_IRQHandler
-    .thumb_set ETH_WKUP_IRQHandler,Default_Handler
-
-    .weak CAN2_TX_IRQHandler
-    .thumb_set CAN2_TX_IRQHandler,Default_Handler
-
-    .weak CAN2_RX0_IRQHandler
-    .thumb_set CAN2_RX0_IRQHandler,Default_Handler
-
-    .weak CAN2_RX1_IRQHandler
-    .thumb_set CAN2_RX1_IRQHandler,Default_Handler
-
-    .weak CAN2_SCE_IRQHandler
-    .thumb_set CAN2_SCE_IRQHandler,Default_Handler
-
-    .weak OTG_FS_IRQHandler
-    .thumb_set OTG_FS_IRQHandler,Default_Handler
-{%- endif %}
+#endif
+/*    bl init_data_bss  jpan*/
+    cpsie   i               /* Unmask interrupts */
+
+/* from m3 project  */
+    ldr    r1, =__etext
+    ldr    r2, =__data_start__
+    ldr    r3, =__data_end__
+
+    subs    r3, r2
+    ble    .LC1
+.LC0:
+    subs    r3, #4
+    ldr    r0, [r1, r3]
+    str    r0, [r2, r3]
+    bgt    .LC0
+.LC1:
+
+#ifdef __STARTUP_CLEAR_BSS
+/*     This part of work usually is done in C library startup code. Otherwise,
+ *     define this macro to enable it in this startup.
+ *
+ *     Loop to zero out BSS section, which uses following symbols
+ *     in linker script:
+ *      __bss_start__: start of BSS section. Must align to 4
+ *      __bss_end__: end of BSS section. Must align to 4
+ */
+    ldr r1, =__bss_start__
+    ldr r2, =__bss_end__
+
+    movs    r0, 0
+.LC2:
+    cmp     r1, r2
+    itt    lt
+    strlt   r0, [r1], #4
+    blt    .LC2
+#endif /* __STARTUP_CLEAR_BSS */
+
+
+    bl    main
+    .pool
+    .size Reset_Handler, . - Reset_Handler
+
+    .align	1
+    .thumb_func
+    .weak DefaultISR
+    .type DefaultISR, %function
+DefaultISR:
+    b	DefaultISR
+    .size DefaultISR, . - DefaultISR
+
+/*    Macro to define default handlers. Default handler
+ *    will be weak symbol and just dead loops. They can be
+ *    overwritten by other handlers */
+    .macro def_irq_handler	handler_name
+    .weak \handler_name
+    .set  \handler_name, DefaultISR
+    .endm
+
+/* Exception Handlers */
+    def_irq_handler    NMI_Handler
+    def_irq_handler    HardFault_Handler
+    def_irq_handler    MemManage_Handler
+    def_irq_handler    BusFault_Handler
+    def_irq_handler    UsageFault_Handler
+    def_irq_handler    SVC_Handler
+    def_irq_handler    DebugMon_Handler
+    def_irq_handler    PendSV_Handler
+    def_irq_handler    SysTick_Handler
+    def_irq_handler    DMA0_IRQHandler
+    def_irq_handler    DMA1_IRQHandler
+    def_irq_handler    DMA2_IRQHandler
+    def_irq_handler    DMA3_IRQHandler
+    def_irq_handler    DMA4_IRQHandler
+    def_irq_handler    DMA5_IRQHandler
+    def_irq_handler    DMA6_IRQHandler
+    def_irq_handler    DMA7_IRQHandler
+    def_irq_handler    DMA8_IRQHandler
+    def_irq_handler    DMA9_IRQHandler
+    def_irq_handler    DMA10_IRQHandler
+    def_irq_handler    DMA11_IRQHandler
+    def_irq_handler    DMA12_IRQHandler
+    def_irq_handler    DMA13_IRQHandler
+    def_irq_handler    DMA14_IRQHandler
+    def_irq_handler    DMA15_IRQHandler
+    def_irq_handler    DMA1_Error_IRQHandler
+    def_irq_handler    MCM_IRQHandler                
+    def_irq_handler    FLASH_IRQHandler              
+;    def_irq_handler    Read_Collision_IRQHandler     
+    def_irq_handler    LVD_IRQHandler                
+    def_irq_handler    LLW_IRQHandler                
+    def_irq_handler    WDOG_IRQHandler               
+    def_irq_handler    I2C1_IRQHandler               
+    def_irq_handler    I2C2_IRQHandler               
+    def_irq_handler    SPI1_IRQHandler               
+    def_irq_handler    SPI2_IRQHandler               
+    def_irq_handler    SPI3_IRQHandler               
+    def_irq_handler    SPI4_IRQHandler               
+    def_irq_handler    USART1_IRQHandler             
+    def_irq_handler    USART2_IRQHandler             
+    def_irq_handler    USART3_IRQHandler             
+    def_irq_handler    USART4_IRQHandler             
+    def_irq_handler    USART5_IRQHandler             
+    def_irq_handler    USART6_IRQHandler             
+    def_irq_handler    ADCA_INT1_IRQHandler          
+    def_irq_handler    ADCA_INT2_IRQHandler          
+    def_irq_handler    ADCA_INT3_IRQHandler          
+    def_irq_handler    ADCA_INT4_IRQHandler          
+    def_irq_handler    ADCA_EVT_IRQHandler           
+    def_irq_handler    ADCB_INT1_IRQHandler          
+    def_irq_handler    ADCB_INT2_IRQHandler          
+    def_irq_handler    ADCB_INT3_IRQHandler          
+    def_irq_handler    ADCB_INT4_IRQHandler          
+    def_irq_handler    ADCB_EVT_IRQHandler           
+    def_irq_handler    ADCC_INT1_IRQHandler          
+    def_irq_handler    ADCC_INT2_IRQHandler          
+    def_irq_handler    ADCC_INT3_IRQHandler          
+    def_irq_handler    ADCC_INT4_IRQHandler          
+    def_irq_handler    ADCC_EVT_IRQHandler           
+    def_irq_handler    CMP1_IRQHandler               
+    def_irq_handler    CMP2_IRQHandler               
+    def_irq_handler    CMP3_IRQHandler               
+    def_irq_handler    CMP4_IRQHandler               
+    def_irq_handler    CMP5_IRQHandler               
+    def_irq_handler    CMP6_IRQHandler               
+    def_irq_handler    EPWM1_IRQHandler              
+    def_irq_handler    EPWM2_IRQHandler              
+    def_irq_handler    EPWM3_IRQHandler              
+    def_irq_handler    EPWM4_IRQHandler              
+    def_irq_handler    EPWM5_IRQHandler              
+    def_irq_handler    EPWM6_IRQHandler              
+    def_irq_handler    EPWM7_IRQHandler              
+    def_irq_handler    EPWM1_TZ_IRQHandler           
+    def_irq_handler    EPWM2_TZ_IRQHandler           
+    def_irq_handler    EPWM3_TZ_IRQHandler           
+    def_irq_handler    EPWM4_TZ_IRQHandler           
+    def_irq_handler    EPWM5_TZ_IRQHandler           
+    def_irq_handler    EPWM6_TZ_IRQHandler           
+    def_irq_handler    EPWM7_TZ_IRQHandler           
+    def_irq_handler    XINT1_IRQHandler             
+    def_irq_handler    XINT2_IRQHandler             
+    def_irq_handler    XINT3_IRQHandler             
+    def_irq_handler    XINT4_IRQHandler             
+    def_irq_handler    XINT5_IRQHandler             
+    def_irq_handler    ECAP1_IRQHandler             
+    def_irq_handler    ECAP2_IRQHandler             
+    def_irq_handler    ECAP3_IRQHandler             
+    def_irq_handler    CAN1_TX_IRQHandler           
+    def_irq_handler    CAN1_RX0_IRQHandler          
+    def_irq_handler    CAN1_RX1_IRQHandler          
+    def_irq_handler    CAN1_SCE_IRQHandler          
+    def_irq_handler    EQEP1_IRQHandler             
+    def_irq_handler    EQEP2_IRQHandler             
+    def_irq_handler    PTMR1_IRQHandler             
+    def_irq_handler    PTMR2_IRQHandler             
+    def_irq_handler    PTMR3_IRQHandler             
+    def_irq_handler    PTMR4_IRQHandler             
+    def_irq_handler    SDFM1_IRQHandler              
+    def_irq_handler    SDFM1_DR0_IRQHandler          
+    def_irq_handler    SDFM1_DR1_IRQHandler          
+    def_irq_handler    SDFM1_DR2_IRQHandler          
+    def_irq_handler    SDFM1_DR3_IRQHandler          
+    def_irq_handler    SDFM2_IRQHandler              
+    def_irq_handler    SDFM2_DR0_IRQHandler          
+    def_irq_handler    SDFM2_DR1_IRQHandler          
+    def_irq_handler    SDFM2_DR2_IRQHandler          
+    def_irq_handler    SDFM2_DR3_IRQHandler          
+    def_irq_handler    DCC1_IRQHandler               
+    def_irq_handler    DCC2_IRQHandler               
+    def_irq_handler    FLASHECC_IRQHandler  
+
+    .end

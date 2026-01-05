@@ -28,7 +28,7 @@
 from csp.project import Project
 
 
-APM32F10xxE = {
+SP28038 = {
     "flash": {
         "addr": 0x08000000,
         "size": 0x0080000,
@@ -40,10 +40,10 @@ APM32F10xxE = {
 }
 
 infos = {
-    "APM32F103ZET6": {
-        **APM32F10xxE,
-        "class": "APM32F10X_HD",
-        "line": "APM32F103ZE",
+    "SP28038": {
+        **SP28038,
+        "class": "SP28038",
+        "line": "SP28038",
     }
 }
 
