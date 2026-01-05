@@ -27,11 +27,9 @@
 {%- set used_channels = CSP.project|gpio_used_channels %}
 
 {%- block includes %}
-#include "apm32f10x.h"
-#include "apm32f10x_eint.h"
-#include "apm32f10x_gpio.h"
-#include "apm32f10x_misc.h"
-#include "apm32f10x_rcm.h"
+
+#include "gpio.h"
+
 {%- endblock %}
 
 {%- block define %}

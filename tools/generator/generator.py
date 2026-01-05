@@ -70,10 +70,10 @@ def files_table(project: Project) -> dict[str, dict[str, str]]:
         "XBAR",
     ]
     files = {
-        "core/inc/main.h": {"brief": "main program body"},
-        "core/src/main.c": {"brief": "main program body"},
-        "core/src/isr.c": {"brief": "interrupt function entry"},
-        "core/src/system_sp28038.c": {
+        "core/inc/csp_main.h": {"brief": "main program body"},
+        "core/src/csp_main.c": {"brief": "main program body"},
+        "core/src/csp_isr.c": {"brief": "interrupt function entry"},
+        "core/src/csp_system_sp28038.c": {
             "brief": "CMSIS Cortex-M4 Device Peripheral Access Layer System Source File"
         },
         ".gitignore": {"force": False},
@@ -83,19 +83,19 @@ def files_table(project: Project) -> dict[str, dict[str, str]]:
     for module in all_modules:
         mod = module.lower()
         name = _remove_trailing_digits(mod)
-        files[f"core/inc/csp/{mod}.h"] = {
-            "brief": f"this file provides code for the {mod} initialization",
-            "template": f"{name}.h.j2",
+        files[f"core/inc/csp/csp_{mod}.h"] = {
+            "brief": f"this file provides code for the csp_{mod} initialization",
+            "template": f"csp_{name}.h.j2",
             "module": module,
         }
-        files[f"core/src/{mod}.c"] = {
-            "brief": f"this file provides code for the {mod} initialization",
-            "template": f"{name}.c.j2",
+        files[f"core/src/csp_{mod}.c"] = {
+            "brief": f"this file provides code for the csp_{mod} initialization",
+            "template": f"csp_{name}.c.j2",
             "module": module,
         }
         if module not in modules:
-            files[f"core/inc/csp/{mod}.h"]["gen"] = False  # type: ignore
-            files[f"core/src/{mod}.c"]["gen"] = False  # type: ignore
+            files[f"core/inc/csp/csp_{mod}.h"]["gen"] = False  # type: ignore
+            files[f"core/src/csp_{mod}.c"]["gen"] = False  # type: ignore
 
     builder = project.gen.builder
     targetChip = project.targetChip
@@ -174,7 +174,7 @@ def get_mdk(project: Project, path: str = ""):
     cpu = (
         f'IRAM(0x{info["ram"]["addr"]:08X},0x{info["ram"]["size"]:08X}) '
         f'IROM(0x{info["flash"]["addr"]:08X},0x{info["flash"]["size"]:08X}) '
-        'CPUTYPE("Cortex-M3") CLOCK(12000000) ELITTLE'
+        'CPUTYPE("Cortex-M4") CLOCK(12000000) ELITTLE'
     )
     defines = builder.builder_defines(project)
     includes = builder.builder_inc_dirs(project)

@@ -68,13 +68,12 @@ src_files_group = {
         "hal/libraries/std_drivers/src/xbar.c",
     ],
     "std_drivers/cmsis": [
-        "core/src/system_apm32f10x.c",
+        "core/src/system_sp28038.c",
     ],
 }
 
 device_map = {
-    "APM32F10X_MD": ["APM32F103C8T6"],
-    "APM32F10X_HD": ["APM32F103ZET6"],
+    "SP28038": ["SP28038"],
 }
 
 
