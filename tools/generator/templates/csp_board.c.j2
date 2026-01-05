@@ -1,0 +1,51 @@
+/*
+  ******************************************************************************
+  * @file           : board.c
+  * @brief          : board configurations
+  ******************************************************************************
+  * @attention
+  *
+  * Copyright (c) 2024 Starpower, Inc.
+  * All rights reserved.
+  *
+  * This software is licensed under terms that can be found in the LICENSE file
+  * in the root directory of this software component.
+  * If no LICENSE file comes with this software, it is provided AS-IS.
+  *
+  ******************************************************************************
+  */
+
+#include "csp_board.h"
+
+//*****************************************************************************
+//
+// Board Configurations
+// Initializes the rest of the modules. 
+// Call this function in your application if you wish to do all module 
+// initialization.
+// If you wish to not use some of the initializations, instead of the 
+// Board_init use the individual Module_inits
+//
+//*****************************************************************************
+void Board_init()
+{
+	PinMux_init();
+}
+
+//*****************************************************************************
+//
+// PINMUX Configurations
+//
+//*****************************************************************************
+void PinMux_init()
+{
+#if 1
+	GPIO_setPinConfig(GPIO_7_SCI1_RX);
+	GPIO_setPinConfig(GPIO_9_SCI1_TX);
+#else
+	GPIO_setPinConfig(GPIO_16_SCI1_RX);
+	GPIO_setPinConfig(GPIO_17_SCI1_TX);
+#endif    
+}
+
+

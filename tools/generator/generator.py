@@ -73,6 +73,8 @@ def files_table(project: Project) -> dict[str, dict[str, str]]:
         "core/inc/csp_main.h": {"brief": "main program body"},
         "core/src/csp_main.c": {"brief": "main program body"},
         "core/src/csp_isr.c": {"brief": "interrupt function entry"},
+        "core/inc/csp_board.h": {"brief": "board header file"},
+        "core/src/csp_board.c": {"brief": "board source file"},
         "core/src/csp_system_sp28038.c": {
             "brief": "CMSIS Cortex-M4 Device Peripheral Access Layer System Source File"
         },
