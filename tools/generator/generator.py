@@ -37,9 +37,42 @@ script_dir = os.path.dirname(__file__)
 root_dir = os.path.join(script_dir, "..", "..")
 
 
+def _remove_trailing_digits(s):
+    return s.rstrip("0123456789")
+
+
 def files_table(project: Project) -> dict[str, dict[str, str]]:
+    all_modules = [
+        "ADC",
+        "CRC",
+        "DCC",
+        "DMA",
+        "DMAMUX",
+        "ECAP",
+        "EPWM",
+        "EQEP",
+        "EWM",
+        "FLASH",
+        "GPIO",
+        "I2C",
+        "I2S",
+        "LIN_SCI",
+        "LIN",
+        "LPTIM",
+        "MCAN",
+        "PTIM",
+        "RCM",
+        "SCI",
+        "SPI_DMA",
+        "SPI",
+        "SYSCTRL",
+        "WWDT",
+        "XBAR",
+    ]
     files = {
+        "core/inc/csp_main.h": {"brief": "main program body"},
         "core/src/csp_main.c": {"brief": "main program body"},
+        "core/src/csp_isr.c": {"brief": "interrupt function entry"},
         "core/inc/csp_board.h": {"brief": "board header file"},
         "core/src/csp_board.c": {"brief": "board source file"},
         "core/src/csp_system_sp28038.c": {
@@ -47,6 +80,24 @@ def files_table(project: Project) -> dict[str, dict[str, str]]:
         },
         ".gitignore": {"force": False},
     }
+
+    modules: list[str] = project.modules
+    for module in all_modules:
+        mod = module.lower()
+        name = _remove_trailing_digits(mod)
+        files[f"core/inc/csp/csp_{mod}.h"] = {
+            "brief": f"this file provides code for the csp_{mod} initialization",
+            "template": f"csp_{name}.h.j2",
+            "module": module,
+        }
+        files[f"core/src/csp_{mod}.c"] = {
+            "brief": f"this file provides code for the csp_{mod} initialization",
+            "template": f"csp_{name}.c.j2",
+            "module": module,
+        }
+        if module not in modules:
+            files[f"core/inc/csp/csp_{mod}.h"]["gen"] = False  # type: ignore
+            files[f"core/src/csp_{mod}.c"]["gen"] = False  # type: ignore
 
     builder = project.gen.builder
     targetChip = project.targetChip
