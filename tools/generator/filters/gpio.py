@@ -149,6 +149,14 @@ def pin_channels(
     return list(project.configs.get("pins", {}).keys())
 
 
+def pin_position(
+    project: Project,
+    channel: str,
+    default: int = 0,
+) -> int:
+    return project.configs.get(f"pins.{channel}.position", default)
+
+
 # fmt: on
 # endregion
 # ------------------------------------------------------------------------------
