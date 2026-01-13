@@ -39,13 +39,13 @@ void Board_init()
 //*****************************************************************************
 void PinMux_init()
 {
-#if 1
-	GPIO_setPinConfig(GPIO_7_SCI1_RX);
-	GPIO_setPinConfig(GPIO_9_SCI1_TX);
-#else
-	GPIO_setPinConfig(GPIO_16_SCI1_RX);
-	GPIO_setPinConfig(GPIO_17_SCI1_TX);
-#endif    
+{%- for channel in CSP.project|pin_channels() %}
+{%- set function = CSP.project|pin_function(channel) %}
+{%- if function and function != "GPIO:Input" and function != "GPIO:Output" %}
+	GPIO_setPinConfig({{ function|replace(":", "_") }});
+{%- endif %}
+{%- endfor %}
+ 
 }
 
 

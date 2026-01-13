@@ -22,19 +22,19 @@
 #define GPIO_0_GPIO0                    0x00000000U
 #define GPIO_0_PA_0                     0x00000000U
 #define GPIO_0_EPWM1_A                  0x00010000U
-#define GPIO_0_LPTIM4                   0x00020000U
+#define GPIO_0_LPTIM3                   0x00020000U
 
 #define GPIO_1_GPIO1                    0x01000000U
 #define GPIO_1_PA_1                     0x01000000U
 #define GPIO_1_EPWM1_B                  0x01010000U
-#define GPIO_1_LPTIM3                   0x01020000U
+#define GPIO_1_LPTIM2                   0x01020000U
 #define GPIO_1_COMP1OUT1                0x01030000U
 #define GPIO_1_OUTPUTXBAR1              0x01040000U
 
 #define GPIO_2_GPIO2                    0x02000000U
 #define GPIO_2_PA_2                     0x02000000U
 #define GPIO_2_EPWM2_A                  0x02010000U
-#define GPIO_2_LPTIM2                   0x02020000U
+#define GPIO_2_LPTIM1                   0x02020000U
 
 #define GPIO_3_GPIO3                    0x03000000U
 #define GPIO_3_PA_3                     0x03000000U
