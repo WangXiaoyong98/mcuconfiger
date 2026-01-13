@@ -41,14 +41,19 @@ void PinMux_init()
 {
 {%- for channel in CSP.project|pin_channels() %}
 {%- set function = CSP.project|pin_function(channel) %}
-{%- set position = CSP.project|pin_position(channel) %}
 {%- if function and function != "GPIO:Input" and function != "GPIO:Output" %}
 {%- if function.startswith("GPIO:") %}
 {%- set gpio_num = function.split(":")[1] %}
-	GPIO_setPinConfig(GPIO_{{ (position - 1)|int }}_GPIO{{ gpio_num }});
+	GPIO_setPinConfig(GPIO_{{ gpio_num }}_GPIO{{ gpio_num }});
 {%- else %}
 {%- set key = function.split(":")[0] %}
-	GPIO_setPinConfig(GPIO_{{ (position - 1)|int }}_{{ key }});
+{%- set gpio_num = CSP.project|pin_function(channel)|default("") %}
+{%- if gpio_num.startswith("GPIO:") %}
+{%- set gpio_num = gpio_num.split(":")[1] %}
+	GPIO_setPinConfig(GPIO_{{ gpio_num }}_{{ key }});
+{%- else %}
+	GPIO_setPinConfig(GPIO_0_{{ key }});
+{%- endif %}
 {%- endif %}
 {%- endif %}
 {%- endfor %}
