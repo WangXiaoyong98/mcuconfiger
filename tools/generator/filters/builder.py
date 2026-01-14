@@ -37,11 +37,22 @@ inc_dirs = [
 ]
 
 src_files_group = {
-    "application/core": [
-        "core/src/main.c",
-        "core/src/isr.c",
+    "Core": [
+        "core/src/csp_gpio.c",
+        "core/src/csp_isr.c",
+        "core/src/csp_main.c",
+        "core/src/csp_rcm.c",
     ],
-    "std_drivers/hal": [
+    "device": [
+        "core/src/csp_board.c",
+    ],
+    "cmsis": [
+        "core/src/csp_system_sp28038.c",
+    ],
+    "startup": [
+        "startup_arm.s",
+    ],
+    "std_drivers": [
         "hal/libraries/std_drivers/src/adc.c",
         "hal/libraries/std_drivers/src/crc.c",
         "hal/libraries/std_drivers/src/dcc.c",
@@ -54,8 +65,8 @@ src_files_group = {
         "hal/libraries/std_drivers/src/flash.c",
         "hal/libraries/std_drivers/src/gpio.c",
         "hal/libraries/std_drivers/src/i2c.c",
-        "hal/libraries/std_drivers/src/lin_sci.c",
         "hal/libraries/std_drivers/src/lin.c",
+        "hal/libraries/std_drivers/src/lin_sci.c",
         "hal/libraries/std_drivers/src/lptim.c",
         "hal/libraries/std_drivers/src/mcan.c",
         "hal/libraries/std_drivers/src/ptim.c",
@@ -63,12 +74,16 @@ src_files_group = {
         "hal/libraries/std_drivers/src/sci.c",
         "hal/libraries/std_drivers/src/spi_dma.c",
         "hal/libraries/std_drivers/src/spi.c",
-        "hal/libraries/std_drivers/src/sysctrl.c",
+        "hal/libraries/std_drivers/src/sysctl.c",
         "hal/libraries/std_drivers/src/wwdt.c",
         "hal/libraries/std_drivers/src/xbar.c",
     ],
-    "std_drivers/cmsis": [
-        "core/src/system_sp28038.c",
+    "utilities": [
+        "hal/libraries/Utilities/adapter_uart.c",
+        "hal/libraries/Utilities/assert.c",
+        "hal/libraries/Utilities/debug_console.c",
+        "hal/libraries/Utilities/retarget/retarget.c",
+        "hal/libraries/Utilities/retarget/uart_stdout.c",
     ],
 }
 
@@ -79,7 +94,7 @@ device_map = {
 
 def builder_defines(project: Project) -> list[str]:
     cl = chip.chip_info(project)
-    li = [cl["class"]]
+    li = [cl["class"], "SP28038"]
     return li
 
 
@@ -93,13 +108,8 @@ def builder_src_files_group(project: Project) -> dict:
     builder = project.gen.builder
     toolchains = project.gen.toolchains
 
-    if builder == "MDK-Arm":
-        group["application/core"].append("startup_arm.s")
-    elif toolchains == "arm-none-eabi":
-        group["application/core"].append("startup_gcc.S")
-
-    for module in project.modules:
-        group["application/core"].append(f"core/src/{module.lower()}.c")
+    # Startup files are now in fixed startup group
+    # No need to dynamically add them to Core group
 
     for key in group.keys():
         group[key].sort()
