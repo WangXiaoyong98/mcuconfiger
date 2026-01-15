@@ -1,34 +1,27 @@
-{#
- # Licensed under the Apache License v. 2 (the "License")
- # You may not use this file except in compliance with the License.
- # You may obtain a copy of the License at
- #
- #     https://www.apache.org/licenses/LICENSE-2.0.html
- #
- # Unless required by applicable law or agreed to in writing, software
- # distributed under the License is distributed on an "AS IS" BASIS,
- # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- # See the License for the specific language governing permissions and
- # limitations under the License.
- #
- # Copyright (C) 2022-2024 xqyjlj<xqyjlj@126.com>
- #
- # @author      xqyjlj
- # @file        system_apm32f10x.c.j2
- #
- # Change Logs:
- # Date           Author       Notes
- # ------------   ----------   -----------------------------------------------
- # 2024-12-12     xqyjlj       initial version
- #
- #}
+/*
+** 
+**     Revisions:
+**     - rev. 1.0 (2024-05-13)
+**         Initial version.
+** ###################################################################
+*/
+
+/*!
+ * @file SYSTEM_SP28038.C
+ * @version 1.0
+ * @date 2024-05-13
+ * @brief Device specific configuration file for SP28038 (header file)
+ *
+ * Provides a system configuration function and a global variable that contains
+ * the system frequency. It configures the device and initializes the oscillator
+ * (PLL) that is part of the microcontroller device.
+ */
 {%- extends "csp-file-base.c.j2" %}
 
 {%- block includes %}
 
-#include "apm32f10x.h"
-#include "apm32f10x_rcm.h"
-#include "system_apm32f10x.h"
+#include <stdint.h>
+#include "sp28038.h"
 {% endblock includes %}
 
 {%- block define %}
@@ -44,111 +37,49 @@
 
 {%- block variables %}
 
-uint32_t SystemCoreClock = 0;
+uint32_t SystemCoreClock = DEFAULT_SYSTEM_CLOCK;
 {% endblock variables %}
 
 {%- block function_body %}
 
-void SystemInit(void)
-{
-    RCM_Reset();
-    SystemCoreClockUpdate();
+void SystemInit (void) {
+#if ((__FPU_PRESENT == 1) && (__FPU_USED == 1))
+  SCB->CPACR |= ((3UL << 10*2) | (3UL << 11*2));    /* set CP10, CP11 Full Access */
+#endif /* ((__FPU_PRESENT == 1) && (__FPU_USED == 1)) */
+  FLASH->CCTL = 0;
+  /* Watchdog disable */
+#if (DISABLE_WWDT)
+  /* WWDT->UNLOCK: WWDTUNLOCK=0xC520 */
+  WWDT->UNLOCK = WWDT_UNLOCK_WWDTUNLOCK_SET(0xC520); /* Key 1 */
+  /* WWDT->UNLOCK: WWDTUNLOCK=0xD928 */
+  WWDT->UNLOCK = WWDT_UNLOCK_WWDTUNLOCK_SET(0xD928); /* Key 2 */
+  /* WWDT->STCTRLH: ?=0,DISTESTWWDT=0,BYTESEL=0,TESTSEL=0,TESTWWDT=0,?=0,?=1,WAITEN=1,STOPEN=1,DBGEN=0,ALLOWUPDATE=1,WINEN=0,IRQRSTEN=0,CLKSRC=1,WWDTEN=0 */
+  WWDT->STCTRLH = WWDT_STCTRLH_BYTESEL_SET(0x00) |
+                 WWDT_STCTRLH_WAITEN_MASK |
+                 WWDT_STCTRLH_STOPEN_MASK |
+                 WWDT_STCTRLH_ALLOWUPDATE_MASK |
+                 WWDT_STCTRLH_CLKSRC_MASK |
+                 0x0100U;
+#endif /* (DISABLE_WWDT) */
+
+  SystemInitHook();
 }
 
-void SystemCoreClockUpdate(void)
-{
-#ifdef APM32F10X_CL
-    uint32_t sysClock, pllMull, pllSource, pll2Mull, pllPsc1, pllPsc2;
-#else
-    uint32_t sysClock, pllMull, pllSource;
-#endif
+/* ----------------------------------------------------------------------------
+   -- SystemCoreClockUpdate()
+   ---------------------------------------------------------------------------- */
 
-    /*!< get sys clock */
-    sysClock = RCM->CFG_B.SCLKSEL;
-
-    switch (sysClock)
-    {
-    /*!< sys clock is HSI */
-    case 0:
-        sysClock = HSI_VALUE;
-        break;
-
-    /*!< sys clock is HSE */
-    case 1:
-        sysClock = HSE_VALUE;
-        break;
-
-    /*!< sys clock is PLL */
-    case 2:
-#ifdef APM32F10X_CL
-        /*!< NOTE : PLL is the same as PLL1 */
-        pllSource = RCM->CFG_B.PLL1SRCSEL;
-
-        /*!< PLL entry clock source is HSE */
-        if (pllSource)
-        {
-            /*!< PLLPSC1 prescaler factor */
-            pllPsc1 = (RCM->CFG2_B.PLLPSC1 + 1);
-
-            /*!< PLL entry clock source is PLL2 */
-            if (RCM->CFG2_B.PLLPSC1SRC)
-            {
-                pll2Mull = (RCM->CFG2_B.PLL2MUL != 15) ? (RCM->CFG2_B.PLL2MUL + 2) : 20;
-                pllPsc2 = RCM->CFG2_B.PLLPSC2 + 1;
-
-                pllSource = ((HSE_VALUE / pllPsc2) * pll2Mull) / pllPsc1;
-            }
-            /*!< PLL entry clock source is HSE */
-            else
-            {
-                pllSource = HSE_VALUE / pllPsc1;
-            }
-        }
-        /*!< PLL entry clock source is HSI/2 */
-        else
-        {
-            pllSource = HSI_VALUE >> 1;
-        }
-
-        pllMull = RCM->CFG_B.PLL1MULCFG;
-        if (pllMull == 13)
-        {
-            /*!< For 6.5 multiplication factor */
-            sysClock = pllSource * pllMull / 2;
-        }
-        else
-        {
-            sysClock = pllSource * (pllMull + 2);
-        }
-#else
-        pllMull = RCM->CFG_B.PLL1MULCFG + 2;
-        pllSource = RCM->CFG_B.PLL1SRCSEL;
-
-        /*!< PLL entry clock source is HSE */
-        if (pllSource == BIT_SET)
-        {
-            sysClock = HSE_VALUE * pllMull;
-
-            /*!< HSE clock divided by 2 */
-            if (pllSource == RCM->CFG_B.PLLHSEPSC)
-            {
-                sysClock >>= 1;
-            }
-        }
-        /*!< PLL entry clock source is HSI/2 */
-        else
-        {
-            sysClock = (HSI_VALUE >> 1) * pllMull;
-        }
-#endif
-        break;
-
-    default:
-        sysClock = HSI_VALUE;
-        break;
-    }
-
-    SystemCoreClock = sysClock;
+void SystemCoreClockUpdate (void) {
+  SystemCoreClock = CPU_XTAL_CLK_HZ;   //only for test
 }
+
+/* ----------------------------------------------------------------------------
+   -- SystemInitHook()
+   ---------------------------------------------------------------------------- */
+
+__attribute__ ((weak)) void SystemInitHook (void) {
+  /* Void implementation of the weak function. */
+}
+
 
 {% endblock function_body %}

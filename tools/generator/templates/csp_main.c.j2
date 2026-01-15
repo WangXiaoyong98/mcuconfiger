@@ -33,24 +33,97 @@
 {%- set modules = CSP.project.modules|sort %}
 
 {%- block includes %}
-#include "apm32f10x.h"
+#include <stdio.h>
+#include "driverlib.h"
+#include "device.h"
+#include "board.h"
+#include "debug_console.h"
+#include "stp_hal.h"
+#include "IQmathlib.h"
+#include "core_cm4.h"
 {%- for module in modules %}
-#include "csp/{{ module|lower }}.h"
+#include "csp_{{ module|lower }}.h"
 {%- endfor %}
 {%- endblock includes %}
 
-{%- block main_init_body %}
-    {{- init_func("RCM", modules) }}
-    {{- init_func("SYS", modules) }}
-    {{- init_func("GPIO", modules) }}
-    {{- init_func("USART1", modules) }}
-    {{- init_func("USART2", modules) }}
-    {{- init_func("USART3", modules) }}
-    {{- init_func("UART4", modules) }}
-    {{- init_func("UART5", modules) }}
-    {{- init_func("CRC", modules) }}
-    {{- init_func("IWDT", modules) }}
-    {{- init_func("WWDT", modules) }}
-{##}
-{%- endblock main_init_body %}
+#define DEMO_SCI          SCI1
+#define BOARD_DEBUG_UART_INSTANCE 0U
+#define DEMO_BAUD  115200
+
+static void WaitWctClose(WWDT_Type *base)
+{
+    /* Accessing register by bus clock */
+    for (uint32_t i = 0; i < WWDT_WCT_INSTRUCITON_COUNT; i++)
+    {
+        (void)base->RSTCNT;
+    }
+}
+
+/*!
+ * @brief Gets the Watchdog timer output.
+ *
+ * @param base WWDT peripheral base address
+ * @return Current value of watchdog timer counter.
+ */
+static inline uint32_t GetTimerOutputValue(WWDT_Type *base)
+{
+    return (uint32_t)((((uint32_t)base->TMROUTH) << 16U) | (base->TMROUTL));
+}
+
+void mydelay_us(uint32_t x)
+{
+    while(x>0)
+    {
+        x--;
+    }
+}
+
+/*!
+ * @brief Main function
+ */
+int main(void)
+{
+    uint16_t wwdt_reset_count = 0;
+    wwdt_test_config_t test_config;
+    wwdt_config_t config;
+
+   //
+    // Initialize device clock and peripherals
+    //
+    Device_init();
+	
+		HAL_Init();
+    //
+    // Board Initialization
+    // Setup eQEP1, configuring the unit timer and quadrature capture units
+    //
+    Board_init();  
+    
+#if DBGCONSOLE_TYPE == DEBUGCONSOLE_REDIRECT_TO_TOOLCHAIN
+    UartStdOutInit(DEMO_SCI_CLK_FREQ, DEMO_BAUD);
+    
+#else
+    DbgConsole_Init(BOARD_DEBUG_UART_INSTANCE, DEMO_BAUD, kSerialPort_Uart, DEVICE_OSCSRC_FREQ);
+#endif
+		int32_t temp;
+		int32_t start_tick,end_tick;
+		PRINTF("\r\n--- Quick test ---\r\n");
+		
+		start_tick = SysTick->VAL;
+    
+		temp = _IQ16sqrt(809041920);
+		
+		end_tick = SysTick->VAL;
+		
+		int32_t result = start_tick - end_tick;
+		
+		PRINTF("temp value is %d \r\n",temp);
+		PRINTF("start_time_val num is %d \r\n",start_time_val);
+    PRINTF("stop_time_val num is %d \r\n",stop_time_val);
+		PRINTF("start_tick num is %d \r\n",start_tick);
+    PRINTF("end_tick num is %d \r\n",end_tick);
+		PRINTF("result num is %d \r\n",result);
+		return 0;
+}
+
 

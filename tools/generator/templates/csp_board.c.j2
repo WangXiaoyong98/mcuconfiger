@@ -41,19 +41,22 @@ void PinMux_init()
 {
 {%- for channel in CSP.project|pin_channels() %}
 {%- set function = CSP.project|pin_function(channel) %}
-{%- if function and function != "GPIO:Input" and function != "GPIO:Output" %}
+{%- if function %}
+{%- set key = function.split(":")[0] %}
+{%- set gpio_num = "0" %}
+
 {%- if function.startswith("GPIO:") %}
 {%- set gpio_num = function.split(":")[1] %}
 	GPIO_setPinConfig(GPIO_{{ gpio_num }}_GPIO{{ gpio_num }});
 {%- else %}
-{%- set key = function.split(":")[0] %}
-{%- set gpio_num = CSP.project|pin_function(channel)|default("") %}
-{%- if gpio_num.startswith("GPIO:") %}
-{%- set gpio_num = gpio_num.split(":")[1] %}
+	{%- set gpio_info = function %}  {#- 使用第一次获取的function值，避免重复调用 -#}
+	{%- if gpio_info.startswith("GPIO:") %}
+		{%- set gpio_num = gpio_info.split(":")[1] %}
+	{%- else %}
+		{%- set chip_gpio_num = CSP.project|get_gpio_number_from_chip_db(key)|default("0") %}
+		{%- set gpio_num = chip_gpio_num %}  {#- 直接使用芯片数据库的值，无论是否为"0" -#}
+	{%- endif %}
 	GPIO_setPinConfig(GPIO_{{ gpio_num }}_{{ key }});
-{%- else %}
-	GPIO_setPinConfig(GPIO_0_{{ key }});
-{%- endif %}
 {%- endif %}
 {%- endif %}
 {%- endfor %}

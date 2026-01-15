@@ -26,9 +26,9 @@
 {%- set modules = CSP.project.modules|sort %}
 
 {%- block includes %}
-#include "apm32f10x.h"
+
 {%- for module in modules %}
-#include "csp/{{ module|lower }}.h"
+#include "csp_{{ module|lower }}.h"
 {%- endfor %}
 {%- endblock %}
 

@@ -24,6 +24,7 @@ from csp.project import Project
 # --< user code begin import, do not change this comment!
 # isort: off
 import json
+import yaml
 
 # isort: on
 # --> user code end import, do not change this comment!
@@ -147,6 +148,75 @@ def pin_channels(
     project: Project,
 ) -> str:
     return list(project.configs.get("pins", {}).keys())
+
+
+def get_gpio_number_from_chip_db(
+    project: Project,
+    function_name: str,
+    default: str = "0"
+) -> str:
+    """
+    从芯片数据库中根据功能名称获取GPIO编号
+    """
+    # 通过项目对象获取目标芯片型号
+    target_chip = getattr(project, 'targetChip', None)
+    if not target_chip:
+        return default
+    
+    # 构建芯片数据库文件路径 - 使用绝对路径
+    import os
+    db_path = f'C:\\Users\\Administrator\\Desktop\\mcu0114\\csp\\resources\\database\\summary\\StarPower\\{target_chip}.yml'
+    
+    try:
+        if os.path.exists(db_path):
+            # 读取芯片数据库文件
+            with open(db_path, 'r', encoding='utf-8') as f:
+                import yaml
+                chip_data = yaml.safe_load(f)
+            
+            # 获取引脚信息
+            chip_pins = chip_data.get('pins', {}) if chip_data else {}
+            
+            # 调试：输出要查找的功能名称
+            # print(f"Looking for function: {function_name}")
+            
+            for pin_name, pin_info in chip_pins.items():
+                if "signals" in pin_info:
+                    for signal in pin_info["signals"]:
+                        # 处理字符串形式的信号，如 "EQEP1S:Y"
+                        if isinstance(signal, str) and ':' in signal:
+                            signal_name = signal.split(':')[0]
+                            if signal_name == function_name:
+                                gpio_number = extract_gpio_number_from_pin_name(pin_name)
+                                # print(f"Found {function_name} on pin {pin_name}, GPIO number: {gpio_number}")
+                                if gpio_number:
+                                    return gpio_number
+                        # 处理直接匹配的字符串，如 "EQEP1S"
+                        elif isinstance(signal, str) and signal == function_name:
+                            gpio_number = extract_gpio_number_from_pin_name(pin_name)
+                            if gpio_number:
+                                return gpio_number
+                        # 处理字典形式的信号
+                        elif isinstance(signal, dict) and function_name in signal:
+                            gpio_number = extract_gpio_number_from_pin_name(pin_name)
+                            if gpio_number:
+                                return gpio_number
+    except Exception as e:
+        # 输出错误信息用于调试
+        print(f"Error accessing chip database for {function_name}: {e}")
+        pass
+    
+    # 如果没有找到，返回默认值
+    # print(f"Could not find GPIO number for {function_name}, returning {default}")
+    return default
+
+
+def extract_gpio_number_from_pin_name(pin_name: str) -> str | None:
+    if pin_name.startswith("GPIO"):
+        gpio_part = pin_name[4:]
+        if gpio_part.isdigit():
+            return gpio_part
+    return None
 
 
 def pin_position(
