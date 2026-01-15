@@ -39,9 +39,7 @@ inc_dirs = [
 src_files_group = {
     "Core": [
         "core/src/csp_gpio.c",
-        "core/src/csp_isr.c",
         "core/src/csp_main.c",
-        "core/src/csp_rcm.c",
     ],
     "device": [
         "core/src/csp_board.c",
