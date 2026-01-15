@@ -133,6 +133,8 @@ def copy_library(
     project: Project, output: str, callback: Callable[[str, int, int, bool, str], None]
 ):
     file_list = [
+        "libraries/cmsis/device/*.h",
+        "libraries/cmsis/device/*.c",
         "libraries/cmsis/device/arm/*",
         "libraries/cmsis/device/gcc/*",
         "libraries/cmsis/inc/*",
@@ -154,7 +156,9 @@ def copy_library(
     # libraries
     for match in file_list:
         for source in glob.glob(f"{root_dir}/{match}"):
-            dest = f"{output}/hal/{os.path.relpath(source, root_dir)}"
+            # 处理目录和文件的不同情况
+            rel_path = os.path.relpath(source, root_dir)
+            dest = f"{output}/hal/{rel_path}"
             dest = dest.replace("\\", "/")
             li[source] = dest
 
