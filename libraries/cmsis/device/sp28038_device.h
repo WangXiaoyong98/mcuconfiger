@@ -178,6 +178,7 @@ typedef unsigned int bp_32;
 //
 #include "hw_memmap.h"
 #include "sp28038.h"
+#if 0
 #include "sp28038_adc.h"
 #include "sp28038_crc.h"
 //#include "f28003x_cmpss.h"
@@ -209,7 +210,7 @@ typedef unsigned int bp_32;
 #include "sp28038_lptim.h"
 #include "sp28038_aes.h"
 #include "sp28038_dcc.h"
-
+#endif    
 
 
 #ifdef __cplusplus

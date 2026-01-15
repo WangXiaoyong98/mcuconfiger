@@ -141,6 +141,7 @@ def copy_library(
         "libraries/std_drivers/inc/*.h",
         "libraries/std_drivers/src/*.c",
         "libraries/std_drivers/src/*.h",
+        "libraries/common/include/driverlib.h",
         "libraries/Utilities/**/*",
         "libraries/Utilities/*.c",
         "libraries/Utilities/*.h",
@@ -156,9 +157,13 @@ def copy_library(
     # libraries
     for match in file_list:
         for source in glob.glob(f"{root_dir}/{match}"):
-            # 处理目录和文件的不同情况
-            rel_path = os.path.relpath(source, root_dir)
-            dest = f"{output}/hal/{rel_path}"
+            # 特殊处理 driverlib.h 文件，将其复制到 std_drivers/src 目录
+            if "common/include/driverlib.h" in source:
+                dest = f"{output}/hal/libraries/std_drivers/src/driverlib.h"
+            else:
+                # 处理目录和文件的不同情况
+                rel_path = os.path.relpath(source, root_dir)
+                dest = f"{output}/hal/{rel_path}"
             dest = dest.replace("\\", "/")
             li[source] = dest
 
