@@ -25,6 +25,7 @@ extern "C" {
 #include "hw_i2c.h"
 #include "sp28038.h"
 #include "debug.h"
+#include "sp28038_device.h"
 //********************************************************
 // * @brief I2C Control Set register description
 //********************************************************
@@ -184,7 +185,7 @@ typedef enum {
 
 #define I2C_StateChanged(i2c)   i2c->CONSET & I2C_CONSET_SI
 
-#define   I2C_BusFree(i2c) !(i2c->CONSET & I2C_CON_STO)
+#define   I2C_BusFree(i2c) !(i2c->CONSET & I2C_CON_FLAGS)
 
 #define  I2C_GetCurState(i2c) i2c->STAT & I2C_STAT_CODE_BITMASK
 //*****************************************************************************
@@ -227,8 +228,8 @@ static inline void
 I2C_Master_ResetControl(I2C_TypeDef *i2c)
 {
     ASSERT(I2C_isBaseValid(i2c));
-    i2c->CONCLR = I2C_CONCLR_SI | I2C_CONCLR_STA | I2C_CONCLR_AA;
-    //HWREG(i2c_base + I2C_O_CONCLR) = I2C_CONCLR_SI | I2C_CONCLR_STA | I2C_CONCLR_AA;
+    i2c->CONCLR = I2C_CONCLR_SIC | I2C_CONCLR_STAC | I2C_CONCLR_AAC;
+    //HWREG(i2c_base + I2C_O_CONCLR) = I2C_CONCLR_SIC | I2C_CONCLR_STAC | I2C_CONCLR_AAC;
 }
 static inline void
 I2C_Master_WriteByte(I2C_TypeDef *i2c, uint8_t data)
@@ -250,8 +251,9 @@ static inline uint32_t
 I2C_Master_NackNextByte(I2C_TypeDef *i2c)
 {
     ASSERT(I2C_isBaseValid(i2c));
-    i2c->CONCLR = I2C_CONCLR_AA;
-    //HWREG(i2c_base + I2C_O_CONCLR) = I2C_CONCLR_AA;
+    i2c->CONCLR = I2C_CONCLR_AAC;
+    //HWREG(i2c_base + I2C_O_CONCLR) = I2C_CONCLR_AAC;
+    return 0;
 }
 static inline void
 I2C_Master_SendStop(I2C_TypeDef *i2c)
@@ -265,11 +267,11 @@ I2C_Master_ForceStart(I2C_TypeDef *i2c)
 {
     ASSERT(I2C_isBaseValid(i2c));
     if (i2c->CONSET & I2C_CONSET_STA)
-        i2c->CONSET = I2C_CON_STO;
+        i2c->CONSET = I2C_CON_FLAGS;
     else      
         I2C_Master_SendStart(i2c);
     /*if (HWREG(i2c_base + I2C_O_CONSET) & I2C_CONSET_STA)
-        HWREG(i2c_base + I2C_O_CONSET) = I2C_CON_STO;
+        HWREG(i2c_base + I2C_O_CONSET) = I2C_CON_FLAGS;
     else
         I2C_Master_SendStart(i2c_base);*/
 }
@@ -286,8 +288,8 @@ static inline void
 I2C_ClearSI(I2C_TypeDef *i2c)
 {
     ASSERT(I2C_isBaseValid(i2c));
-    i2c->CONCLR = I2C_CONCLR_SI | I2C_CONCLR_STA;
-    //HWREG(i2c_base + I2C_O_CONCLR) = I2C_CONCLR_SI | I2C_CONCLR_STA;
+    i2c->CONCLR = I2C_CONCLR_SIC | I2C_CONCLR_STAC;
+    //HWREG(i2c_base + I2C_O_CONCLR) = I2C_CONCLR_SIC | I2C_CONCLR_STAC;
 }
 
 //*****************************************************************************
@@ -314,7 +316,7 @@ I2C_ClearSI(I2C_TypeDef *i2c)
 //! \note Copyright (c) 2025 starpower.inc
 //
 //*****************************************************************************
-static inline void
+static inline
 void I2C_enableModule(I2C_TypeDef *i2c)
 {
     ASSERT(I2C_isBaseValid(i2c));
@@ -350,8 +352,8 @@ static inline void
 I2C_disableModule(I2C_TypeDef *i2c) 
 {
     ASSERT(I2C_isBaseValid(i2c));
-    i2c->CONCLR = I2C_CONCLR_I2EN;
-    //HWREG(i2c_base + I2C_O_CONCLR) = I2C_CONCLR_I2EN;
+    i2c->CONCLR = I2C_CONCLR_I2ENC;
+    //HWREG(i2c_base + I2C_O_CONCLR) = I2C_CONCLR_I2ENC;
 }
 
 /**

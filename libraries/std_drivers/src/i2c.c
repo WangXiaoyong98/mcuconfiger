@@ -37,12 +37,12 @@ void I2C_Init(I2C_TypeDef *i2c)
     /* Enable I2C clock */
     switch  ((uint32_t)i2c)
     {
-        case (uint32_t)I2C1:
+        case (uint32_t)I2C1_BASE:
             SYSCTRL->ISP1CGC3 |= SYSCTRL_ISP1CGC3_I2C1_MASK;
             SYSCTRL->SOFTRST1 |= SYSCTRL_SOFTRST1_I2C1RST_MASK;
             SYSCTRL->SOFTRST1 &= ~SYSCTRL_SOFTRST1_I2C1RST_MASK;
             break;
-        case (uint32_t)I2C2:
+        case (uint32_t)2:
             SYSCTRL->ISP1CGC3 |= SYSCTRL_ISP1CGC3_I2C2_MASK;
             SYSCTRL->SOFTRST1 |= SYSCTRL_SOFTRST1_I2C2RST_MASK;
             SYSCTRL->SOFTRST1 &= ~SYSCTRL_SOFTRST1_I2C2RST_MASK;
@@ -52,8 +52,8 @@ void I2C_Init(I2C_TypeDef *i2c)
         }
     /* Reset I2C state machine */
     /* Reset STA, AA and SI. Stop flag should not be cleared as it is a reserved bit */
-    i2c->CONCLR = I2C_CONCLR_AAC_MASK |I2C_CONCLR_SIC_MASK | I2C_CONCLR_STAC_MASK;
-    i2c->CONSET = I2C_CONSET_AA_MASK | I2C_CONSET_I2CEN_MASK | I2C_CONSET_I2CIE_MASK;
+    //i2c->CONCLR = I2C_CONCLR_AAC_MASK |I2C_CONCLR_SIC_MASK | I2C_CONCLR_STAC_MASK;
+    //i2c->CONSET = I2C_CONSET_AA_MASK | I2C_CONSET_I2CEN_MASK | I2C_CONSET_I2CIE_MASK;
 }
 //*****************************************************************************
 //
@@ -71,6 +71,7 @@ void I2C_Init(I2C_TypeDef *i2c)
 //*****************************************************************************
 void I2C_initController(I2C_TypeDef *i2c, uint32_t sysclkHz, uint32_t bitRate)
 {
+#if 0
     uint32_t n,m;
     uint32_t i;
     float temp;
@@ -96,7 +97,7 @@ void I2C_initController(I2C_TypeDef *i2c, uint32_t sysclkHz, uint32_t bitRate)
     i2c->CLK = (m<<4) | n;
     //HWREG(base + I2C_O_CLK) = (m<<4) | n;
     return SUCCESS;
-
+#endif
 }
 
 /*****************************************************************************
