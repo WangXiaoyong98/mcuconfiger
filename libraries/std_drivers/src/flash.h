@@ -18,7 +18,7 @@
 
 #ifndef Flash_H
 #define Flash_H
-
+#include "sp28038_flash.h"
 
 #ifdef __cplusplus
 extern "C" {

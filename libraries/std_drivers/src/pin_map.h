@@ -201,13 +201,13 @@
 
 #define GPIO_30_GPIO30                  0x1E000000U
 #define GPIO_30_PA_30                   0x1E000000U
-#define GPIO_30_CAN1_RX                 0x1E010000U
+#define GPIO_30_MCAN1_RX                 0x1E010000U
 #define GPIO_30_SD2_C4                  0x1E030000U
 #define GPIO_30_SPI4_SOUT               0x1E050000U
 
 #define GPIO_31_GPIO31                  0x1F000000U
 #define GPIO_31_PA_31                   0x1F000000U
-#define GPIO_31_CAN1_TX                 0x1F010000U
+#define GPIO_31_MCAN1_TX0                 0x1F010000U
 #define GPIO_31_SD2_D4                  0x1F030000U
 #define GPIO_31_SPI4_CLK                0x1F050000U
 
@@ -280,14 +280,14 @@
 #define GPIO_42_GPIO42                  0x2A000000U
 #define GPIO_42_PB_10                   0x2A000000U
 #define GPIO_42_COMP1OUT1               0x2A010000U
-#define GPIO_42_CAN2_TX                 0x2A020000U
+#define GPIO_42_MCAN2_TX0                 0x2A020000U
 #define GPIO_42_SD2_D3                  0x2A030000U
 #define GPIO_42_OUTPUTXBAR1             0x2A040000U
 #define GPIO_42_SPI1_CLK                0x2A050000U
 
 #define GPIO_43_GPIO43                  0x2B000000U
 #define GPIO_43_PB_11                   0x2B000000U
-#define GPIO_43_CAN2_RX                 0x2B020000U
+#define GPIO_43_MCAN2_RX                 0x2B020000U
 #define GPIO_43_OUTPUTXBAR2             0x2B040000U
 #define GPIO_43_SPI1_CS0                0x2B050000U
 

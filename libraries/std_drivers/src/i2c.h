@@ -23,6 +23,8 @@ extern "C" {
 //I2C mode
 #include <stdint.h>
 #include "hw_i2c.h"
+#include "sp28038.h"
+#include "debug.h"
 //********************************************************
 // * @brief I2C Control Set register description
 //********************************************************
