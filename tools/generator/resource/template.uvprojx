@@ -229,7 +229,7 @@
               <MiscControls>-fno-common  -fdata-sections  -ffreestanding  -fno-builtin  -mthumb</MiscControls>
               <Define>SP28038</Define>
               <Undefine />
-              <IncludePath>.\core\inc\csp;.\hal\libraries\Utilities;.\hal\libraries\Utilities\retarget;.\hal\libraries\cmsis\inc;.\hal\libraries\std_drivers\inc;.\hal\libraries\std_drivers\src;core/inc;hal/libraries/cmsis/device;hal/libraries/cmsis/inc;hal/libraries/std_drivers/inc</IncludePath>
+              <IncludePath>.\core\inc\csp;.\hal\libraries\Utilities;.\hal\libraries\Utilities\retarget;.\hal\libraries\cmsis\inc;.\hal\libraries\std_drivers;.\hal\libraries\std_drivers\src;core/inc;hal/libraries/cmsis/device;hal/libraries/cmsis/inc;hal/libraries/std_drivers/inc</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>

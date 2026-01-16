@@ -518,7 +518,7 @@ extern "C" {
 //
 // Includes
 //
-#include "sp28038_globalprototypes.h"       // Prototypes for global functions
+//#include "sp28038_globalprototypes.h"       // Prototypes for global functions
                                            // within the .c files.
 //#include "sp28038_adc_defines.h"
 //#include "sp28038_gpio_defines.h"           // Macros used for GPIO support code
@@ -526,7 +526,7 @@ extern "C" {
 //#include "sp28038_dma_defines.h"        // Macros used for DMA support code
 //#include "sp28038_epwm_defines.h"           // Macros used for PWM examples.
 //#define CPU_FRQ_160MHZ 160000000
-#include "sp28038_defines.h"
+//#include "sp28038_defines.h"
 #define EXTERNAL_CLOCK   16000000
 
 //
