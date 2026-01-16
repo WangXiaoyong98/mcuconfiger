@@ -27,7 +27,7 @@ extern "C" {
 //
 // Device support included files
 //
-#include "sp28038_project.h"
+//#include "sp28038_project.h"
 
 //
 // Defines

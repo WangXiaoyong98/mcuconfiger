@@ -39,44 +39,13 @@
 #include "csp_board.h"
 #include "debug_console.h"
 #include "stp_hal.h"
-#include "IQmathlib.h"
 #include "core_cm4.h"
 {%- for module in modules %}
-#include "csp_{{ module|lower }}.h"
 {%- endfor %}
 {%- endblock includes %}
-
 #define DEMO_SCI          SCI1
 #define BOARD_DEBUG_UART_INSTANCE 0U
 #define DEMO_BAUD  115200
-
-static void WaitWctClose(WWDT_Type *base)
-{
-    /* Accessing register by bus clock */
-    for (uint32_t i = 0; i < WWDT_WCT_INSTRUCITON_COUNT; i++)
-    {
-        (void)base->RSTCNT;
-    }
-}
-
-/*!
- * @brief Gets the Watchdog timer output.
- *
- * @param base WWDT peripheral base address
- * @return Current value of watchdog timer counter.
- */
-static inline uint32_t GetTimerOutputValue(WWDT_Type *base)
-{
-    return (uint32_t)((((uint32_t)base->TMROUTH) << 16U) | (base->TMROUTL));
-}
-
-void mydelay_us(uint32_t x)
-{
-    while(x>0)
-    {
-        x--;
-    }
-}
 
 /*!
  * @brief Main function
@@ -92,11 +61,8 @@ int main(void)
     //
     Device_init();
 	
-		HAL_Init();
-    //
-    // Board Initialization
-    // Setup eQEP1, configuring the unit timer and quadrature capture units
-    //
+	HAL_Init();
+
     Board_init();  
     
 #if DBGCONSOLE_TYPE == DEBUGCONSOLE_REDIRECT_TO_TOOLCHAIN
@@ -105,24 +71,10 @@ int main(void)
 #else
     DbgConsole_Init(BOARD_DEBUG_UART_INSTANCE, DEMO_BAUD, kSerialPort_Uart, DEVICE_OSCSRC_FREQ);
 #endif
-		int32_t temp;
-		int32_t start_tick,end_tick;
-		PRINTF("\r\n--- Quick test ---\r\n");
+
+		PRINTF("hello world ---\r\n");
 		
-		start_tick = SysTick->VAL;
-    
-		temp = _IQ16sqrt(809041920);
-		
-		end_tick = SysTick->VAL;
-		
-		int32_t result = start_tick - end_tick;
-		
-		PRINTF("temp value is %d \r\n",temp);
-		PRINTF("start_time_val num is %d \r\n",start_time_val);
-    PRINTF("stop_time_val num is %d \r\n",stop_time_val);
-		PRINTF("start_tick num is %d \r\n",start_tick);
-    PRINTF("end_tick num is %d \r\n",end_tick);
-		PRINTF("result num is %d \r\n",result);
+
 		return 0;
 }
 

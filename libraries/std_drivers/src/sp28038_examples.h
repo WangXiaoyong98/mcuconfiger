@@ -533,7 +533,7 @@ extern "C" {
 // Include files not used with F/BIOS
 //
 
-#include "sp28038_defaultisr.h"
+//#include "sp28038_defaultisr.h"
 //should use assembly code to write it again
 extern void delaynus(uint32_t loops);
 #define DELAY_US(A)  delaynus(((((long double) A * 1000.0L) / (long double)CPU_RATE) - 9.0L) / 6.0L)

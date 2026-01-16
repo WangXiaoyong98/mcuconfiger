@@ -34,6 +34,7 @@ inc_dirs = [
     "hal/libraries/cmsis/device",
     "hal/libraries/cmsis/inc",
     "hal/libraries/std_drivers/inc",
+    "hal/libraries/stp/inc",
 ]
 
 src_files_group = {
@@ -82,6 +83,11 @@ src_files_group = {
         "hal/libraries/Utilities/debug_console.c",
         "hal/libraries/Utilities/retarget/retarget.c",
         "hal/libraries/Utilities/retarget/uart_stdout.c",
+    ],
+    "stp": [
+        "hal/libraries/stp/src/stp_hal.c",
+        "hal/libraries/stp/src/stp_hal_cortex.c",
+        "hal/libraries/stp/src/stp_it.c",
     ],
 }
 
