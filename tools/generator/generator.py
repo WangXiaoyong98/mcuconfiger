@@ -166,6 +166,13 @@ def copy_library(
             dest = dest.replace("\\", "/")
             li[source] = dest
 
+    # Also copy the sct file for MDK builds
+    sct_source = f"{root_dir}/libraries/cmsis/device/arm/SP28038_flash.sct"
+    sct_dest = f"{output}/hal/libraries/cmsis/device/arm/SP28038_flash.sct"
+    sct_dest = sct_dest.replace("\\", "/")
+    if os.path.exists(sct_source):
+        li[sct_source] = sct_dest
+
     count = len(li)
     for index, (source, dest) in enumerate(li.items(), start=1):
         if not os.path.exists(dest):
@@ -175,6 +182,25 @@ def copy_library(
             callback(dest, index, count, True, "because the file does not exist")
         else:
             callback(dest, index, count, False, "because the file already exists")
+
+    # Special handling for MDK: create a project-named .sct file in the expected build directory
+    if project.gen.builder == "MDK-Arm":
+        sct_source = f"{root_dir}/libraries/cmsis/device/arm/SP28038_flash.sct"
+        if os.path.exists(sct_source):
+            # Copy the sct file to the expected build directory with the project name
+            # Keil looks for the .sct file in the build directory (e.g., build_mdk\03.sct)
+            build_dir = f"{output}/build_mdk"
+            project_sct_dest = f"{build_dir}/{project.name}.sct"
+            project_sct_dest = project_sct_dest.replace("\\", "/")
+            
+            if not os.path.exists(project_sct_dest):
+                if not os.path.isdir(build_dir):
+                    os.makedirs(build_dir)
+                shutil.copy(sct_source, project_sct_dest)
+                count += 1
+                callback(project_sct_dest, count, count, True, "because the file does not exist (project-specific sct file in build directory)")
+            else:
+                callback(project_sct_dest, count, count, False, "because the file already exists (project-specific sct file in build directory)")
 
 
 def get_mdk(project: Project, path: str = ""):
