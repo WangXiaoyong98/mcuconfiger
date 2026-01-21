@@ -60,7 +60,6 @@ src_files_group = {
         "hal/libraries/std_drivers/src/epwm.c",
         "hal/libraries/std_drivers/src/eqep.c",
         "hal/libraries/std_drivers/src/ewm.c",
-        "hal/libraries/std_drivers/src/flash.c",
         "hal/libraries/std_drivers/src/gpio.c",
         "hal/libraries/std_drivers/src/i2c.c",
         "hal/libraries/std_drivers/src/lin.c",
@@ -75,7 +74,6 @@ src_files_group = {
         "hal/libraries/std_drivers/src/sysctl.c",
         "hal/libraries/std_drivers/src/wwdt.c",
         "hal/libraries/std_drivers/src/xbar.c",
-        "hal/libraries/std_drivers/src/sp28038_globalvariabledefs.c",
     ],
     "utilities": [
         "hal/libraries/Utilities/adapter_uart.c",
