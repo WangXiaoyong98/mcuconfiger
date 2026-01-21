@@ -49,13 +49,7 @@ void PinMux_init()
 {%- set gpio_num = function.split(":")[1] %}
 	GPIO_setPinConfig(GPIO_{{ gpio_num }}_GPIO{{ gpio_num }});
 {%- else %}
-	{%- set gpio_info = function %}  {#- 使用第一次获取的function值，避免重复调用 -#}
-	{%- if gpio_info.startswith("GPIO:") %}
-		{%- set gpio_num = gpio_info.split(":")[1] %}
-	{%- else %}
-		{%- set chip_gpio_num = CSP.project|get_gpio_number_from_chip_db(key)|default("0") %}
-		{%- set gpio_num = chip_gpio_num %}  {#- 直接使用芯片数据库的值，无论是否为"0" -#}
-	{%- endif %}
+	{%- set gpio_num = channel[4:] %}  {#- Extract GPIO number from channel name like "GPIO43" #}
 	GPIO_setPinConfig(GPIO_{{ gpio_num }}_{{ key }});
 {%- endif %}
 {%- endif %}

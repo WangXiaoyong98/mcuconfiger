@@ -163,9 +163,47 @@ def get_gpio_number_from_chip_db(
     if not target_chip:
         return default
     
-    # 构建芯片数据库文件路径 - 使用绝对路径
+    # 构建芯片数据库文件路径 - 使用灵活的路径查找
     import os
-    db_path = f'C:\\Users\\Administrator\\Desktop\\mcu0114\\csp\\resources\\database\\summary\\StarPower\\{target_chip}.yml'
+    
+    # 智能搜索可能的路径
+    possible_paths = []
+    
+    # 1. 当前工作目录 (后端启动路径)
+    cwd = os.getcwd()
+    possible_paths.append(os.path.join(cwd, 'csp', 'resources', 'database', 'summary', 'StarPower', f'{target_chip}.yml'))
+    
+    # 2. 脚本所在目录的上级目录
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    # 向上导航到不同层级
+    for i in range(1, 8):  # 尝试向上8级
+        search_dir = script_dir
+        for _ in range(i):
+            search_dir = os.path.dirname(search_dir)
+        possible_paths.append(os.path.join(search_dir, 'csp', 'resources', 'database', 'summary', 'StarPower', f'{target_chip}.yml'))
+    
+    # 3. 常见的开发目录
+    common_dirs = [
+        os.path.expanduser('~'),  # 用户主目录
+        os.path.join(os.path.expanduser('~'), 'Desktop'),  # 桌面
+        os.path.join(os.path.expanduser('~'), 'Documents'),  # 文档
+    ]
+    for common_dir in common_dirs:
+        possible_paths.append(os.path.join(common_dir, 'mcufix', 'csp', 'resources', 'database', 'summary', 'StarPower', f'{target_chip}.yml'))
+        possible_paths.append(os.path.join(common_dir, 'mcu0114', 'csp', 'resources', 'database', 'summary', 'StarPower', f'{target_chip}.yml'))
+    
+    # 找到第一个存在的路径
+    db_path = None
+    for path in possible_paths:
+        if os.path.exists(path):
+            db_path = path
+            break
+    
+    # 如果都找不到，使用默认路径
+    if not db_path:
+        # 默认使用脚本所在目录的上级目录
+        default_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(script_dir)))))
+        db_path = os.path.join(default_root, 'csp', 'resources', 'database', 'summary', 'StarPower', f'{target_chip}.yml')
     
     try:
         if os.path.exists(db_path):
