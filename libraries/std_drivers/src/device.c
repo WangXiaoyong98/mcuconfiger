@@ -40,7 +40,7 @@ void Device_init(void)
     //
     // Disable the watchdog
     //
-//    SysCtl_disableWatchdog();   
+//    SysCtl_disableWatchdog();
 
 
 

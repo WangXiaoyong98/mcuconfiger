@@ -54,7 +54,7 @@
     wwdt_test_config_t test_config;
     wwdt_config_t config;
 
-   //
+    //
     // Initialize device clock and peripherals
     //
     Device_init();
@@ -68,7 +68,7 @@
     DbgConsole_Init(BOARD_DEBUG_UART_INSTANCE, DEMO_BAUD, kSerialPort_Uart, DEVICE_OSCSRC_FREQ);
 #endif
 
-	PRINTF("hello world ---\n");
+	PRINTF("hello world... \r\n");
 {%- endblock main_init_body %}
 
 
