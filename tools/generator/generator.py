@@ -140,6 +140,7 @@ def copy_library(
         "libraries/std_drivers/inc/*.h",
         "libraries/std_drivers/src/*.c",
         "libraries/std_drivers/src/*.h",
+        "libraries/std_drivers/src/device.c",  # 明确添加 device.c 文件
         "libraries/common/include/driverlib.h",
         "libraries/Utilities/**/*",
         "libraries/Utilities/*.c",

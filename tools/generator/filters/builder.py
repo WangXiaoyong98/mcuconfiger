@@ -74,6 +74,7 @@ src_files_group = {
         "hal/libraries/std_drivers/src/sysctl.c",
         "hal/libraries/std_drivers/src/wwdt.c",
         "hal/libraries/std_drivers/src/xbar.c",
+        "hal/libraries/std_drivers/src/device.c",
     ],
     "utilities": [
         "hal/libraries/Utilities/adapter_uart.c",
