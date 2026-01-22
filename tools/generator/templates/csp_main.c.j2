@@ -42,15 +42,14 @@
 {%- for module in modules %}
 {%- endfor %}
 {%- endblock includes %}
+
+{%- block define %}
 #define DEMO_SCI          SCI1
 #define BOARD_DEBUG_UART_INSTANCE 0U
 #define DEMO_BAUD  115200
+{%- endblock define %}
 
-/*!
- * @brief Main function
- */
-int main(void)
-{
+{%- block main_init_body %}
     uint16_t wwdt_reset_count = 0;
     wwdt_test_config_t test_config;
     wwdt_config_t config;
@@ -59,8 +58,6 @@ int main(void)
     // Initialize device clock and peripherals
     //
     Device_init();
-	
-	HAL_Init();
 
     Board_init();  
     
@@ -71,10 +68,7 @@ int main(void)
     DbgConsole_Init(BOARD_DEBUG_UART_INSTANCE, DEMO_BAUD, kSerialPort_Uart, DEVICE_OSCSRC_FREQ);
 #endif
 
-		PRINTF("hello world ---\r\n");
-		
-
-		return 0;
-}
+	PRINTF("hello world ---\n");
+{%- endblock main_init_body %}
 
 
