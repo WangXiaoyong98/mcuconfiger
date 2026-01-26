@@ -44,11 +44,7 @@ void csp_gpio_init(void)
     EINT_Config_T eint_config = {0};
 {%- endif %}
 {#  #}
-{%- set clocks = CSP.project|gpio_used_clocks() %}
-{%- if clocks|length() > 0 %}
-    /*!< enable the {{ clocks|gpio_clocks_to_alias|join(", ") }} clock. */
-    RCM_EnableAPB2PeriphClock({{ clocks|join(" | ") }});
-{%- endif %}
+
 
 {%- for port in used_ports %}
     {%- for channels_group in CSP.project|gpio_channels_group_by_port(used_channels, port) %}
@@ -73,6 +69,11 @@ void csp_gpio_init(void)
     gpio_config.speed = {{ speed }};
         {%- endif %}
     GPIO_Config({{ port }}, &gpio_config);
+
+        {%- for channel in channels_group %}
+    {%- set gpio_num = channel[4:] %}
+    GPIO_setPadConfig(GPIO{{ gpio_num }}, {{ CSP.project|gpio_channel_pin_type(channel) }});
+        {%- endfor %}
     {%- endfor %}
 {%- endfor %}
 

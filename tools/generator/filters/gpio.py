@@ -69,6 +69,14 @@ _gpio_state_t_return_type = Literal[
 ]
 
 
+_gpio_pin_type_t_return_type = Literal[
+    "push_pull",
+    "open_drain",
+    "pullup",
+    "pulldown",
+]
+
+
 def gpio_mode_t(
     project: Project,
     channel: str,
@@ -103,6 +111,30 @@ def gpio_state_t(
     default: _gpio_state_t_return_type = "reset",
 ) -> _gpio_state_t_return_type:
     return project.configs.get(f"{instance}.{channel}.gpio_state_t", default)
+
+
+def gpio_pin_type_t(
+    project: Project,
+    channel: str,
+    instance: str = "GPIO",
+    default: _gpio_pin_type_t_return_type = "push_pull",
+) -> _gpio_pin_type_t_return_type:
+    return project.configs.get(f"{instance}.{channel}.gpio_pin_type_t", default)
+
+
+def gpio_channel_pin_type(project: Project, channel: str) -> str:
+    pin_type = gpio_pin_type_t(project, channel)
+    
+    if pin_type == "push_pull":
+        return "GPIO_PIN_TYPE_IE"
+    elif pin_type == "open_drain":
+        return "GPIO_PIN_TYPE_IE | GPIO_PIN_TYPE_OD"
+    elif pin_type == "pullup":
+        return "GPIO_PIN_TYPE_IE | GPIO_PIN_TYPE_PULLUP"
+    elif pin_type == "pulldown":
+        return "GPIO_PIN_TYPE_IE | GPIO_PIN_TYPE_PULLDOWN"
+    else:
+        return "GPIO_PIN_TYPE_IE"
 
 
 def gpio_channels(

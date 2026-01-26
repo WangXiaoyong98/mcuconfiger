@@ -35,7 +35,6 @@ void csp_rcm_init(void)
 {%- if mco_enabled %}
     GPIO_Config_T gpio_config = {0};
 {#  #}
-    RCM_EnableAPB2PeriphClock({{ mco_io|gpio_clock }});
 {%- endif %}
 
     {%- if CSP.project|rcm_prefetch_buffer_enabled_t() == 'rcm_prefetch_buffer_enable' %}
