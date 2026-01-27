@@ -318,12 +318,11 @@ def gpio_used_channels(project: Project) -> list[str]:
     channels = gpio_channels(project)
     for channel in channels:
         function = pin_function(project, channel)
-        mode = pin_mode(project, channel)
-
+        
+        # 检查function是否非空且通道名不以"RCM-"开头
         if (
             len(function) != 0  # function != ""
             and not channel.startswith("RCM-")  # name startswith "RCM-"
-            and len(mode) == 0  # mode == ""
         ):
             pins.append(channel)
 
