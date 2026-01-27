@@ -577,7 +577,7 @@ def gpio_channel_direction(project: Project, channel: str) -> str:
 def gpio_channel_pad_config(project: Project, channel: str) -> str:
     try:
         # 获取各种GPIO配置选项
-        pin_type = project.configs.get(f"GPIO.{channel}.gpio_pin_type_t", "")
+        pin_type = project.configs.get(f"GPIO.{channel}.gpio_pin_type_t", "push_pull")
         direction = project.configs.get(f"GPIO.{channel}.gpio_direction_t", "input")
         
         # 初始化宏列表
@@ -591,30 +591,15 @@ def gpio_channel_pad_config(project: Project, channel: str) -> str:
         elif pin_type == "pulldown":
             macros.append("GPIO_PIN_TYPE_PULLDOWN")
         
-        # 检查驱动强度（假设配置名为gpio_drive_strength_t）
-        drive_strength = project.configs.get(f"GPIO.{channel}.gpio_drive_strength_t", "low")
-        if drive_strength == "high":
-            macros.append("GPIO_PIN_TYPE_DRE")
+        # 对于输出模式，确保至少有基本的配置
+        if direction == "output":
+            # 推挽输出是默认的，不需要特殊宏
+            pass
         
-        # 检查转换率（假设配置名为gpio_slew_rate_t）
-        slew_rate = project.configs.get(f"GPIO.{channel}.gpio_slew_rate_t", "low")
-        if slew_rate == "high":
-            macros.append("GPIO_PIN_TYPE_SRE")
-        
-        # 检查恒流源驱动（假设配置名为gpio_current_source_t）
-        current_source = project.configs.get(f"GPIO.{channel}.gpio_current_source_t", "false")
-        if current_source == "true":
-            macros.append("GPIO_PIN_TYPE_CSE")
-        
-        # 检查输入使能（假设配置名为gpio_input_enable_t）
+        # 检查输入使能，对于输入模式或需要读取输出状态的情况
         input_enable = project.configs.get(f"GPIO.{channel}.gpio_input_enable_t", "true")
         if input_enable == "true":
             macros.append("GPIO_PIN_TYPE_IE")
-        
-        # 检查开源输出（假设配置名为gpio_open_source_t）
-        open_source = project.configs.get(f"GPIO.{channel}.gpio_open_source_t", "false")
-        if open_source == "true":
-            macros.append("GPIO_PIN_TYPE_OSE")
         
         # 如果没有添加任何宏，使用默认值
         if not macros:
