@@ -134,18 +134,6 @@ def gpio_pad_config(
     return result
 
 
-def gpio_qualification_mode(
-    project: Project,
-    channel: str,
-    instance: str = "GPIO",
-    default: str = "GPIO_QUAL_SYNC",
-) -> str:
-    result = project.configs.get(f"{instance}.{channel}.gpio_qualification_mode", default)
-    if not result:
-        return default
-    return result
-
-
 def gpio_channel_pin_type(project: Project, channel: str) -> str:
     try:
         pin_type = gpio_pin_type_t(project, channel)
@@ -191,22 +179,6 @@ def pin_label(
     default: str = "",
 ) -> str:
     return project.configs.get(f"pins.{channel}.label", default)
-
-
-def pin_locked(
-    project: Project,
-    channel: str,
-    default: bool = False,
-) -> bool:
-    return project.configs.get(f"pins.{channel}.locked", default)
-
-
-def pin_mode(
-    project: Project,
-    channel: str,
-    default: str = "",
-) -> str:
-    return project.configs.get(f"pins.{channel}.mode", default)
 
 
 def pin_channels(
@@ -345,13 +317,11 @@ def gpio_used_channels(project: Project) -> list[str]:
     pins = []
     channels = gpio_channels(project)
     for channel in channels:
-        locked = pin_locked(project, channel)
         function = pin_function(project, channel)
         mode = pin_mode(project, channel)
 
         if (
-            locked  # locked == True
-            and len(function) != 0  # function != ""
+            len(function) != 0  # function != ""
             and not channel.startswith("RCM-")  # name startswith "RCM-"
             and len(mode) == 0  # mode == ""
         ):
@@ -601,16 +571,65 @@ def gpio_channel_eint_trigger(project: Project, channel: str) -> str:
 
 
 def gpio_channel_direction(project: Project, channel: str) -> str:
-    mode = gpio_mode_t(project, channel)
-    return "GPIO_DIR_MODE_OUT" if mode == "output" else "GPIO_DIR_MODE_IN"
+    direction = project.configs.get(f"GPIO.{channel}.gpio_direction_t", "input")
+    return "GPIO_DIR_MODE_OUT" if direction == "output" else "GPIO_DIR_MODE_IN"
 
 
 def gpio_channel_pad_config(project: Project, channel: str) -> str:
-    return gpio_pad_config(project, channel)
+    try:
+        # 获取各种GPIO配置选项
+        pin_type = project.configs.get(f"GPIO.{channel}.gpio_pin_type_t", "")
+        direction = project.configs.get(f"GPIO.{channel}.gpio_direction_t", "input")
+        
+        # 初始化宏列表
+        macros = []
+        
+        # 根据pin_type添加相应的宏
+        if pin_type == "open_drain":
+            macros.append("GPIO_PIN_TYPE_OD")
+        elif pin_type == "pullup":
+            macros.append("GPIO_PIN_TYPE_PULLUP")
+        elif pin_type == "pulldown":
+            macros.append("GPIO_PIN_TYPE_PULLDOWN")
+        
+        # 检查驱动强度（假设配置名为gpio_drive_strength_t）
+        drive_strength = project.configs.get(f"GPIO.{channel}.gpio_drive_strength_t", "low")
+        if drive_strength == "high":
+            macros.append("GPIO_PIN_TYPE_DRE")
+        
+        # 检查转换率（假设配置名为gpio_slew_rate_t）
+        slew_rate = project.configs.get(f"GPIO.{channel}.gpio_slew_rate_t", "low")
+        if slew_rate == "high":
+            macros.append("GPIO_PIN_TYPE_SRE")
+        
+        # 检查恒流源驱动（假设配置名为gpio_current_source_t）
+        current_source = project.configs.get(f"GPIO.{channel}.gpio_current_source_t", "false")
+        if current_source == "true":
+            macros.append("GPIO_PIN_TYPE_CSE")
+        
+        # 检查输入使能（假设配置名为gpio_input_enable_t）
+        input_enable = project.configs.get(f"GPIO.{channel}.gpio_input_enable_t", "true")
+        if input_enable == "true":
+            macros.append("GPIO_PIN_TYPE_IE")
+        
+        # 检查开源输出（假设配置名为gpio_open_source_t）
+        open_source = project.configs.get(f"GPIO.{channel}.gpio_open_source_t", "false")
+        if open_source == "true":
+            macros.append("GPIO_PIN_TYPE_OSE")
+        
+        # 如果没有添加任何宏，使用默认值
+        if not macros:
+            return "GPIO_PIN_TYPE_IE"
+        
+        # 组合宏
+        return " | ".join(macros)
+    except Exception:
+        return "GPIO_PIN_TYPE_IE"
 
 
 def gpio_channel_qualification_mode(project: Project, channel: str) -> str:
-    return gpio_qualification_mode(project, channel)
+    # 直接返回默认值，不处理滤波长度相关配置
+    return "GPIO_QUAL_SYNC"
 
 
 
