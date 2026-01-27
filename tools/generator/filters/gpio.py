@@ -168,7 +168,13 @@ def gpio_channels(
     project: Project,
     instance: str = "GPIO",
 ) -> list[str]:
-    return list(project.configs.get(instance, {}).keys())
+    # 返回所有在pins部分配置为GPIO的引脚
+    pins = project.configs.get('pins', {})
+    gpio_pins = []
+    for pin_name, pin_config in pins.items():
+        if pin_config.get('function', '').startswith('GPIO:'):
+            gpio_pins.append(pin_name)
+    return gpio_pins
 
 
 def pin_function(
