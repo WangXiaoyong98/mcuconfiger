@@ -191,7 +191,6 @@ GPIO_setPadConfig(uint32_t pin, uint32_t pinType)
     if((GPIO_PIN_TYPE_SRE & pinType) == GPIO_PIN_TYPE_SRE)
     {
         portBaseAddr[GPIO_PORTxPCRx_INDEX(pin)] |= PORT_PCR_SRE_MASK;
-			  
     }		
    
     //
