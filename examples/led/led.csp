@@ -97,7 +97,7 @@ configs:
 gen:
   builder: CMake
   builderVersion: v3.7
-  hal: csp_hal_apm32f1
+  hal: csp_hal_sp28038
   halVersion: latest
   linker:
     heapSize: 512
@@ -110,6 +110,6 @@ modules:
   - RCM
   - SYS
 name: led
-targetChip: APM32F103ZET6
-vendor: Geehy
+targetChip: SP28038
+vendor: StarPower
 version: 0.1.0

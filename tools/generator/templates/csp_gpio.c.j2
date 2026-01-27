@@ -37,9 +37,6 @@
 {%- block function_body %}
 void csp_gpio_init(void)
 {
-{%- if used_ports|length() > 0 %}
-    GPIO_Config_T gpio_config = {0};
-{%- endif %}
 {%- if eint_channels|length() > 0 %}
     EINT_Config_T eint_config = {0};
 {%- endif %}
@@ -53,27 +50,16 @@ void csp_gpio_init(void)
     {%- set pins = channels_group|gpio_channels_to_pins() %}
     /*!< configure the {{ port }}<{{ pins|join(", ") }}>. */
 
-        {%- set channels_classified = CSP.project|gpio_channels_classify_by_state(channels_group) %}
-        {%- if channels_classified %}
-            {%- for level, channels in channels_classified.items() %}
-            {%- set pins_classified = channels|gpio_channels_to_pins() %}
-    GPIO_WriteBitValue({{ port }}, {{ pins_classified|join(" | ") }}, {{ level }});
-            {%- endfor %}
-        {%- endif %}
-
-    gpio_config.pin = {{ pins|join(" | ") }};
-    gpio_config.mode = {{ CSP.project|gpio_channel_mode(channels_group[0]) }};
-
-        {%- set speed = CSP.project|gpio_channel_speed(channels_group[0]) %}
-        {%- if speed %}
-    gpio_config.speed = {{ speed }};
-        {%- endif %}
-    GPIO_Config({{ port }}, &gpio_config);
-
-        {%- for channel in channels_group %}
-    {%- set gpio_num = channel[4:] %}
-    GPIO_setPadConfig(GPIO{{ gpio_num }}, {{ CSP.project|gpio_channel_pin_type(channel) }});
-        {%- endfor %}
+    {%- for channel in channels_group %}
+        /*!< configure the GPIO direction. */
+        GPIO_setDirectionMode({{ channel }}, {{ CSP.project|gpio_channel_direction(channel) }});
+        
+        /*!< configure the GPIO PAD. */
+        GPIO_setPadConfig({{ channel }}, {{ CSP.project|gpio_channel_pad_config(channel) }});
+        
+        /*!< configure the GPIO Qualification Mode. */
+        GPIO_setQualificationMode({{ channel }}, {{ CSP.project|gpio_channel_qualification_mode(channel) }});
+    {%- endfor %}
     {%- endfor %}
 {%- endfor %}
 

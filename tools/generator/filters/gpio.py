@@ -122,18 +122,45 @@ def gpio_pin_type_t(
     return project.configs.get(f"{instance}.{channel}.gpio_pin_type_t", default)
 
 
+def gpio_pad_config(
+    project: Project,
+    channel: str,
+    instance: str = "GPIO",
+    default: str = "GPIO_PIN_TYPE_IE",
+) -> str:
+    result = project.configs.get(f"{instance}.{channel}.gpio_pad_config", default)
+    if not result:
+        return default
+    return result
+
+
+def gpio_qualification_mode(
+    project: Project,
+    channel: str,
+    instance: str = "GPIO",
+    default: str = "GPIO_QUAL_SYNC",
+) -> str:
+    result = project.configs.get(f"{instance}.{channel}.gpio_qualification_mode", default)
+    if not result:
+        return default
+    return result
+
+
 def gpio_channel_pin_type(project: Project, channel: str) -> str:
-    pin_type = gpio_pin_type_t(project, channel)
-    
-    if pin_type == "push_pull":
-        return "GPIO_PIN_TYPE_IE"
-    elif pin_type == "open_drain":
-        return "GPIO_PIN_TYPE_IE | GPIO_PIN_TYPE_OD"
-    elif pin_type == "pullup":
-        return "GPIO_PIN_TYPE_IE | GPIO_PIN_TYPE_PULLUP"
-    elif pin_type == "pulldown":
-        return "GPIO_PIN_TYPE_IE | GPIO_PIN_TYPE_PULLDOWN"
-    else:
+    try:
+        pin_type = gpio_pin_type_t(project, channel)
+        
+        if pin_type == "push_pull":
+            return "GPIO_PIN_TYPE_IE"
+        elif pin_type == "open_drain":
+            return "GPIO_PIN_TYPE_IE | GPIO_PIN_TYPE_OD"
+        elif pin_type == "pullup":
+            return "GPIO_PIN_TYPE_IE | GPIO_PIN_TYPE_PULLUP"
+        elif pin_type == "pulldown":
+            return "GPIO_PIN_TYPE_IE | GPIO_PIN_TYPE_PULLDOWN"
+        else:
+            return "GPIO_PIN_TYPE_IE"
+    except Exception:
         return "GPIO_PIN_TYPE_IE"
 
 
@@ -565,6 +592,20 @@ def gpio_channel_eint_trigger(project: Project, channel: str) -> str:
     assert result != "", f"failed to get gpio eint trigger, {mode!r}"
 
     return result
+
+
+def gpio_channel_direction(project: Project, channel: str) -> str:
+    mode = gpio_mode_t(project, channel)
+    return "GPIO_DIR_MODE_OUT" if mode == "output" else "GPIO_DIR_MODE_IN"
+
+
+def gpio_channel_pad_config(project: Project, channel: str) -> str:
+    return gpio_pad_config(project, channel)
+
+
+def gpio_channel_qualification_mode(project: Project, channel: str) -> str:
+    return gpio_qualification_mode(project, channel)
+
 
 
 def gpio_eventout_channels(project: Project, channels: list[str]) -> list[str]:
