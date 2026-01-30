@@ -4,7 +4,7 @@ author:
   website:
     blog: https://xqyjlj.github.io/
     github: https://github.com/xqyjlj
-name: csp_hal_SP28038
+name: csp_hal_sp28038
 version: latest
 license: Apache-2.0
 type: hal
