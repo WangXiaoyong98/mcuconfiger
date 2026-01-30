@@ -31,7 +31,7 @@ import xml.etree.ElementTree as etree
 from typing import Callable
 
 from csp.project import Project
-from .filters import builder, chip
+from .filters import builder, chip, gpio
 
 script_dir = os.path.dirname(__file__)
 root_dir = os.path.join(script_dir, "..", "..")

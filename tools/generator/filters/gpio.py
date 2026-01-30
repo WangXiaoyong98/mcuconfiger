@@ -183,7 +183,7 @@ def pin_label(
 
 def pin_channels(
     project: Project,
-) -> str:
+) -> list[str]:
     return list(project.configs.get("pins", {}).keys())
 
 
