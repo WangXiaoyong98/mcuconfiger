@@ -1,0 +1,134 @@
+chips:
+  StarPower:
+    content:
+      SP28038:
+        SP28038:
+          SP28038:
+            core: Arm Cortex-M4
+            current:
+              lowest: 1.9
+              run: 421.0
+            flash: 256
+            frequency: 140
+            io: 100
+            package: LQFP144
+            peripherals:
+              ADC 12-bit: 16
+              MCAN: 1
+              I2C: 2
+              RTC: 1
+              SDIO: 1
+              SPI: 3
+              Timer 16-bit: 8
+              SCI: 6
+              CRC: 1
+              DMA: 16
+              Crossbar: 1
+              CMP: 2
+              eQEP: 2
+              ePWM: 3
+              eCAP: 2
+              WWDT: 1
+              EWM: 1
+            ram: 128
+            temperature:
+              max: 105.0
+              min: -40.0
+            voltage:
+              max: 3.6
+              min: 2.0
+packages:
+  hal:
+    SP28038:
+      version:
+        v1.0.0:
+          urls:
+            - https://e.gitee.com/the-shanghai-trail/repos/the-shanghai-trail/sp2401mpw100/sources/csp_hal_sp28038-v1.0.0.csppack 
+          note:
+            en: first version
+            zh-cn: 第一次发版
+      author:
+        name: StarPower ESW Team
+        email: xqyjlj@126.com
+        website:
+          blog: https://xqyjlj.github.io/
+          github: https://github.com/xqyjlj
+      license: Apache-2.0
+      vendor: Geehy
+      vendorUrl:
+        en: https://geehy.com
+        zh-cn: https://geehy.com
+      description:
+        en: APM32F1 chip support package for CSP software
+        zh-cn: 适用于 CSP 软件的 apm32f1 芯片支持包
+      url:
+        en: https://geehy.com
+        zh-cn: https://geehy.com
+      support: xqyjlj@126.com
+  toolchains:
+    gcc_arm_none_eabi:
+      version:
+        v10.2.1:
+          urls:
+            windows:
+              - https://github.com/csplink/toolchains/releases/download/arm-none-eabi/gcc-arm-none-eabi-10.2.1.windows.csppack
+            linux:
+              - https://github.com/csplink/toolchains/releases/download/arm-none-eabi/gcc-arm-none-eabi-10.2.1.linux.csppack
+          note:
+            en: gcc-arm-none-eabi version 10.2.1
+            zh-cn: gcc-arm-none-eabi v10.2.1
+        v10.3.1:
+          urls:
+            windows:
+              - https://github.com/csplink/toolchains/releases/download/arm-none-eabi/gcc-arm-none-eabi-10.3.1.windows.csppack
+            linux:
+              - https://github.com/csplink/toolchains/releases/download/arm-none-eabi/gcc-arm-none-eabi-10.3.1.linux.csppack
+          note:
+            en: gcc-arm-none-eabi version 10.3.1
+            zh-cn: gcc-arm-none-eabi v10.3.1
+      author:
+        name: xqyjlj
+        email: xqyjlj@126.com
+        website:
+          blog: https://xqyjlj.github.io/
+          github: https://github.com/xqyjlj
+      license: GPL-3.0
+      vendor: Arm
+      vendorUrl:
+        en: https://www.arm.com/
+        zh-cn: https://www.arm.com/
+      description:
+        en: Pre-built GNU toolchain for Arm Cortex-A/R and Cortex-M processors
+        zh-cn: 为 Arm Cortex-A/R 和 Cortex-M 处理器预构建的 GNU 工具链
+      url:
+        en: https://developer.arm.com/downloads/-/gnu-rm
+        zh-cn: https://developer.arm.com/downloads/-/gnu-rm
+      support: xqyjlj@126.com
+  components:
+    system:
+      csp_compiler:
+        version:
+          v1.0.0:
+            urls:
+              - https://github.com/csplink/csp_compiler/releases/download/v1.0.0/csp_compiler-v1.0.0.csppack
+            note:
+              en: first version
+              zh-cn: 第一次发版
+        author:
+          name: xqyjlj
+          email: xqyjlj@126.com
+          website:
+            blog: https://xqyjlj.github.io/
+            github: https://github.com/xqyjlj
+        license: Apache-2.0
+        vendor: Csplink
+        vendorUrl:
+          en: https://csplink.top
+          zh-cn: https://csplink.top
+        description:
+          en: Compiler abstraction support package for CSP software
+          zh-cn: 适用于 CSP 软件的 编译器抽象层软件包
+        url:
+          en: https://github.com/csplink/csp_compiler
+          zh-cn: https://github.com/csplink/csp_compiler
+        support: xqyjlj@126.com

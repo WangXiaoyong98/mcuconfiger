@@ -1,0 +1,822 @@
+name: SP28038
+clockTree: SP28038
+core: ARM Cortex-M4
+frequency: 140
+io: 100
+series: SP28038
+line: SP28038
+vendor: StarPower
+vendorUrl:
+  en: https://www.powersemi.cc/EN/
+  zh-cn: https://www.powersemi.cc/
+documents:
+  datasheet:
+    SP28038数据手册:
+      url:
+        en: 
+        zh-cn: 
+      type: pdf
+      size: 0MB
+      version: "1.0"
+hals: [csp_hal_sp28038]
+hasPowerPad: false
+illustrate:
+  en: |
+    The **SP28038** series MCU is based on the **32-bit Arm® Cortex®-M4 core**,
+    with a maximum operating frequency of **140 MHz** and built-in **FPU (Floating Point Unit)**
+    for efficient arithmetic operations.
+
+    ### Key Features
+    - **High-performance core**: 32-bit Arm® Cortex®-M4, up to 140 MHz
+    - **Hardware acceleration**: Supports **FPU** for floating-point calculations
+    - **Enhanced peripherals**:
+      - **EMMC controller** for external memory expansion
+      - **MCAN** can be used simultaneously
+    - **On-chip resources**: Integrated memory, timers, ADC/DAC
+    - **System advantages**: Low power consumption, large capacity, portability,
+      and fast Flash erase/program speed
+
+    ### Certifications
+    - **IEC 61508 SIL2** functional safety certified (China)
+    - Meets **industrial-grade reliability standards**
+
+    ### Application Scenarios
+    - Model aircraft
+    - Handheld gimbals
+    - Barcode scanners
+    - Alarms and smart locks
+    - Electronic scales
+    - Industrial and IoT devices requiring performance and reliability
+
+    ---
+
+    With its **high performance and reliability**, the SP28038 series MCU
+    is an ideal choice for industrial control, consumer electronics, and IoT applications.
+
+  zh-cn: |
+    **SP28038** 系列 MCU 基于 **32 位 Arm® Cortex®-M4 内核**，最高工作主频可达 **140 MHz**，并内置 **FPU 浮点运算单元**，在性能与能效之间实现良好平衡。
+
+    ### 主要特性
+    - **高性能内核**：32 位 Arm® Cortex®-M4，主频 140 MHz
+    - **硬件加速**：支持 **FPU 浮点运算单元**
+    - **增强型外设**：
+      - **EPWM 控制器**，用于PWM输出
+      - **EMMC 控制器**，便于外部存储扩展
+      - ** CAN 接口 ** 可同时使用
+    - **片上资源丰富**：集成存储器、定时器、ADC/DAC
+    - **优秀的系统特性**：功耗低、容量大、可移植性好、Flash 擦除/编程速度快
+
+    ### 认证与标准
+    - 已通过 **中国 IEC 61508 SIL2 功能安全认证**
+    - 符合 **工业级高可靠性标准**
+
+    ### 典型应用领域
+    - 航模飞机
+    - 手持云台
+    - 扫码枪
+    - 报警器、密码锁
+    - 电子秤
+    - 其他工业与消费类应用
+
+    ---
+
+    凭借其 **高性能与高可靠性**，**SP28038 系列 MCU** 是工业控制、消费电子和物联网应用的理想选择。
+introduction:
+  en: "A mainstream Arm Cortex-M4 value-line MCU featuring a 140 MHz CPU and 256 KB Flash"
+  zh-cn: 具有 256 KB Flash 和 140MHz CPU 的主流 Arm Cortex-M4 超值系列 MCU
+modules:
+  peripherals:
+    CPU:
+      children:
+        Cortex-M4: {}
+        NVIC: {}
+    System:
+      children:
+        SYS:
+          define: sp28038_sys
+        DMA: {}
+        XBAR: {}
+        GPIO:
+          define: sp28038_gpio
+        WWDT: 
+          define: sp28038_wwdt
+        RCM:
+          define: sp28038_rcm
+    Analog:
+      children:
+        ADCC0: {}
+        ADCC1: {}
+        ADCC2: {}
+        ADCC3: {}
+        ADCC4: {}
+        ADCC5: {}
+        ADCC6: {}
+        ADCC8: {}
+        ADCC9: {}
+        ADCC10: {}
+        ADCC11: {}
+        ADCC12: {}
+        ADCC13: {}
+        ADCC14: {}
+    Timers:
+      children:
+        RTC: {}
+        TMR1: {}
+        TMR2: {}
+        TMR3: {}
+        TMR4: {}
+        TMR5: {}
+        TMR6: {}
+        TMR7: {}
+        TMR8: {}
+    Connectivity:
+      children:
+        CAN: {}
+        EMMC: {}
+        I2C1: {}
+        I2C2: {}
+        SDIO: {}
+        SPI1: {}
+        SPI2: {}
+        SPI3: {}
+        USART1:
+          define: sp28038_usart
+        USART2:
+          define: sp28038_usart
+        USART3:
+          define: sp28038_usart
+        UART4:
+          define: sp28038_uart
+        UART5:
+          define: sp28038_uart
+        USBD: {}
+    Multimedia:
+      children:
+        I2S2: {}
+        I2S3: {}
+    Computing:
+      children:
+        CRC:
+          define: sp28038_crc
+  middlewares: {}
+package: LQFP80
+url:
+  en: https://global.geehy.com/product/fifth/APM32F103
+  zh-cn: https://geehy.com/product/fifth/APM32F103
+builders:
+  XMake:
+    v2.8.1: [gcc-arm-none-eabi]
+  CMake:
+    v3.7: [gcc-arm-none-eabi]
+  MDK-Arm:
+    v5.41: [default]
+linker:
+  defaultHeapSize: "0x200"
+  defaultStackSize: "0x400"
+pins:
+  GPIO22:
+    position: 1
+    type: I/O
+    signals:
+      - EQEP1S:Y
+      - COMP3_OUT:Y
+      - SCI5_TX:Y
+      - SCI3_TX:Y
+      - SPI1_CS1:Y
+    modes:
+      - GPIO:22
+  GPIO32:
+    position: 2
+    type: I/O
+    signals:
+      - I2C1_SDA:Y
+      - ADCSOCAO:Y
+      - OUTPUTXBAR5:Y
+      - SPI4_CS:Y
+    modes:
+      - GPIO:32
+  GPIO33:
+    position: 3
+    type: I/O
+    signals:
+      - I2C1_CLK:Y
+      - ADCSOCBO:Y
+      - OUTPUTXBAR6:Y
+      - SCI2_CTS:Y
+    modes:
+      - GPIO:33
+  GPIO23:
+    position: 4
+    type: I/O
+    signals:
+      - EQEP1I:Y
+      - SCI3_RX:Y
+      - SCI5_RX:Y
+      - SPI1_CS2:Y
+    modes:
+      - GPIO:23
+  GPIO42:
+    position: 5
+    type: I/O
+    signals:
+      - COMP1OUT1:Y
+      - MCAN2_TX0:Y
+      - SD2_D3:Y
+      - OUTPUTXBAR1:Y
+      - SPI1_CLK:Y
+    modes:
+      - GPIO:42
+  GPIO43:
+    position: 6
+    type: I/O
+    signals:
+      - COMP1OUT2:Y
+      - MCAN2_RX:Y
+      - OUTPUTXBAR2:Y
+      - SPI1_CS0:Y
+    modes:
+      - GPIO:43
+  VDD1:
+    position: 7
+    type: power
+  VSS1:
+    position: 8
+    type: power
+  XRS:
+    position: 9
+    type: power
+  GPIO45:
+    position: 10
+    type: I/O
+    signals:
+      - TRST:Y
+      - EQEP2A:Y
+      - SCI3_CTS:Y
+    modes:
+      - GPIO:45
+  ADCINA7:
+    position: 11
+    type: power
+  GPIO46:
+    position: 12
+    type: I/O
+    signals:
+      - SD1_D1:Y
+      - ADCINA6:Y
+      - ADCINC14:Y
+      - MCAN2_TX1:Y
+    modes:
+      - GPIO:46
+  GPIO47:
+    position: 13
+    type: I/O
+    signals:
+      - MCAN2_CLK:Y
+      - SD1_C1:Y
+      - ADCINA5:Y
+      - ADCINC13:Y
+    modes:
+      - GPIO:47
+  GPIO48:
+    position: 14
+    type: I/O
+    signals:
+      - ADCINA4:Y
+      - ADCINC12:Y
+      - COMP2A:Y
+    modes:
+      - GPIO:48
+  GPIO49:
+    position: 15
+    type: I/O
+    signals:
+      - SD1_D2:Y
+      - I2C2_SDA:Y
+      - ADCINA3:Y
+      - ADCINC11:Y
+    modes:
+      - GPIO:49
+  GPIO50:
+    position: 16
+    type: I/O
+    signals:
+      - I2C3_SDA:Y
+      - ADCINA2:Y
+      - ADCINC10:Y
+      - COMP1A:Y
+    modes:
+      - GPIO:50
+  GPIO51:
+    position: 17
+    type: I/O
+    signals:
+      - SD1_C2:Y
+      - I2C3_SCL:Y
+      - ADCINA1:Y
+      - ADCINC9:Y
+    modes:
+      - GPIO:51
+  GPIO52:
+    position: 18
+    type: I/O
+    signals:
+      - SD1_D3:Y
+      - I2C3_SDA:Y
+      - ADCINA0:Y
+      - ADCINC8:Y
+    modes:
+      - GPIO:52
+  ADC_VREFP:
+    position: 19
+    type: power
+  VDDA:
+    position: 20
+    type: power
+  VSSA:
+    position: 21
+    type: power
+  ADC_VREFLO:
+    position: 22
+    type: power
+  GPIO59:
+    position: 23
+    type: I/O
+    signals:
+      - SD2_D1:Y
+      - ADCINB0:Y
+      - ADCINC0:Y
+    modes:
+      - GPIO:59
+  GPIO58:
+    position: 24
+    type: I/O
+    signals:
+      - SD2_C1:Y
+      - ADCINB1:Y
+      - ADCINC1:Y
+    modes:
+      - GPIO:58
+  GPIO57:
+    position: 25
+    type: I/O
+    signals:
+      - ADCINB2:Y
+      - ADCINC2:Y
+      - COMP1B:Y
+    modes:
+      - GPIO:57
+  GPIO56:
+    position: 26  
+    type: I/O
+    signals:
+      - SD1_C4:Y
+      - ADCINB3:Y
+      - ADCINC3:Y
+    modes:
+      - GPIO:56
+  GPIO55:
+    position: 27
+    type: I/O
+    signals:
+      - ADCINB4:Y
+      - ADCINC4:Y
+      - COMP2B:Y
+    modes:
+      - GPIO:55
+  GPIO54:
+    position: 28
+    type: I/O
+    signals:
+      - SD1_D4:Y
+      - I2C3_CUR:Y
+      - ADCINB5:Y
+      - ADCINC5:Y
+    modes:
+      - GPIO:54
+  GPIO53:
+    position: 29
+    type: I/O
+    signals:
+      - SD1_C3:Y
+      - I2C3_SCL:Y
+      - ADCINB6:Y
+      - ADCINC6:Y
+    modes:
+      - GPIO:53
+  ADCINB7:
+    position: 30
+    type: power
+  GPIO27:
+    position: 31
+    type: I/O
+    signals:
+      - SPI2_CS0:Y
+      - I2C1_SDA:Y
+    modes:
+      - GPIO:27
+  GPIO31:
+    position: 32
+    type: I/O
+    signals:
+      - MCAN1_TX0:Y
+      - SD2_D4:Y
+      - SPI4_CLK:Y
+    modes:
+      - GPIO:31
+  GPIO30:
+    position: 33
+    type: I/O
+    signals:
+      - MCAN1_RX:Y
+      - I2C3_CLK:Y
+      - SD2_C4:Y
+      - SPI4_SIN:Y
+      - SPI4_SOUT:Y
+    modes:
+      - GPIO:30
+  GPIO29:
+    position: 34
+    type: I/O
+    signals:
+      - SCI6_TX:Y
+      - I2C2_CLK:Y
+      - SPI4_SOUT:Y
+      - OUTPUTXBAR4:Y
+      - SPI4_SIN:Y
+      - SCI4_TX:Y
+      - COMP3A:Y
+    modes:
+      - GPIO:29
+  VSS2:
+    position: 35
+    type: power
+  VDDIO1:
+    position: 36
+    type: power
+  GPIO26:
+    position: 37
+    type: I/O
+    signals:
+      - SPI2_CLK:Y
+      - I2C3_SDA:Y
+      - SPI2_CLK:Y
+      - SCI1_RTS:Y
+      - SCI4_RTS:Y
+    modes:
+      - GPIO:26
+  TEST:
+    position: 38
+    type: power
+  GPIO9:
+    position: 39
+    type: I/O
+    signals:
+      - EPWM5_B:Y
+      - SCI1_TX:Y
+    modes:
+      - GPIO:9
+  GPIO28:
+    position: 40
+    type: I/O
+    signals:
+      - SCI6_RX:Y
+      - I2C2_SDA:Y
+      - SCI4_RX:Y
+      - COMP3B:Y
+      - OUTPUTXBAR3:Y
+    modes:
+      - GPIO:28
+  GPIO18:
+    position: 41
+    type: I/O
+    signals:
+      - SPI1_CLK:Y
+      - SCI4_TX:Y
+      - XCLKOUT:Y
+    modes:
+      - GPIO:18
+  GPIO17:
+    position: 42
+    type: I/O
+    signals:
+      - SPI1_SOUT:Y
+      - SPI1_SIN:Y
+      - OUTPUTXBAR8:Y
+      - SCI1_TX:Y
+    modes:
+      - GPIO:17
+  GPIO8:
+    position: 43
+    type: I/O
+    signals:
+      - EPWM5_A:Y
+      - ADCSOCAO:Y
+    modes:
+      - GPIO:8
+  GPIO25:
+    position: 44
+    type: I/O
+    signals:
+      - SPI2_SIN:Y
+      - SPI2_SOUT:Y
+      - SCI1_CTS:Y
+      - SCI4_CTS:Y
+      - I2C2_SDA:Y
+    modes:
+      - GPIO:25
+  GPIO44:
+    position: 45
+    type: I/O
+    signals:
+      - SPI3_CLK:Y
+      - EQEP2B:Y
+      - SCI3_RTS:Y
+      - MCAN2_TX0:Y
+    modes:
+      - GPIO:44
+  GPIO16:
+    position: 46
+    type: I/O
+    signals:
+      - SPI1_SIN:Y
+      - SPI1_SOUT:Y
+      - OUTPUTXBAR7:Y
+      - SCI1_RX:Y
+    modes:
+      - GPIO:16
+  GPIO12:
+    position: 47
+    type: I/O
+    signals:
+      - SCI2_TX:Y
+      - SPI2_SIN:Y
+      - OUTPUTXBAR3:Y
+      - SPI2_SOUT:Y
+      - EPWM7_A:Y
+    modes:
+      - GPIO:12
+  GPIO41:
+    position: 48
+    type: I/O
+    signals:
+      - EPWM7_B:Y
+      - SD2_C3:Y
+      - EQEP2I:Y
+      - SPI1_SIN:Y
+      - SPI1_SOUT:Y
+    modes:
+      - GPIO:41
+  GPIO6:
+    position: 49
+    type: I/O
+    signals:
+      - EPWM4_A:Y
+      - VDT1_OUT:Y
+      - SYNCOUT:Y
+      - OUTPUTXBAR2:Y
+      - VDT2_OUT:Y
+      - TDT1_TEST_OUT:Y
+    modes:
+      - GPIO:6
+  GPIO7:
+    position: 50
+    type: I/O
+    signals:
+      - EPWM4_B:Y
+      - SCI1_RX:Y
+      - COMP1_OUT:Y
+      - COMP2_OUT:Y
+      - COMP3_OUT:Y
+    modes:
+      - GPIO:7
+  X2:
+    position: 51
+    type: power
+  X1:
+    position: 52
+    type: power
+  VSS3:
+    position: 53
+    type: power
+  VDD2:
+    position: 54
+    type: power
+  GPIO19:
+    position: 55
+    type: I/O
+    signals:
+      - XCLKIN:Y
+      - SPI1_CS0:Y
+      - SCI4_RX:Y
+    modes:
+      - GPIO:19
+  GPIO39:
+    position: 56
+    type: I/O
+    signals:
+      - SPI3_CS0:Y
+      - SD2_C2:Y
+      - I2C1_CLK:Y
+      - EWM_OUT_B:Y
+    modes:
+      - GPIO:39
+  GPIO38:
+    position: 57
+    type: I/O
+    signals:
+      - TCK:Y
+      - SCI2_TX:Y
+      - OUTPUTXBAR8:Y
+    modes:
+      - GPIO:38
+  GPIO37:
+    position: 58
+    type: I/O
+    signals:
+      - TDO:Y
+      - SPI3_SIN:Y
+      - SPI3_SOUT:Y
+      - OUTPUTXBAR4:Y
+    modes:
+      - GPIO:37
+  GPIO35:
+    position: 59
+    type: I/O
+    signals:
+      - TDI:Y
+      - SPI3_SOUT:Y
+      - SPI3_SIN:Y
+      - OUTPUTXBAR3:Y
+    modes:
+      - GPIO:35
+  GPIO36:
+    position: 60
+    type: I/O
+    signals:
+      - TMS:Y
+      - SCI2_RX:Y
+      - SPI1_CS3:Y
+    modes:
+      - GPIO:36
+  GPIO11:
+    position: 61
+    type: I/O
+    signals:
+      - EPWM6_B:Y
+      - SCI2_RX:Y
+    modes:
+      - GPIO:11
+  GPIO5:
+    position: 62
+    type: I/O
+    signals:
+      - EPWM3_B:Y
+      - SPI1_SOUT:Y
+      - SPI1_SIN:Y
+    modes:
+      - GPIO:5
+  GPIO4:
+    position: 63
+    type: I/O
+    signals:
+      - EPWM3_A:Y
+      - LPTIM0:Y
+    modes:
+      - GPIO:4
+  GPIO40:
+    position: 64
+    type: I/O
+    signals:
+      - EPWM7_A:Y
+      - SPI1_SOUT:Y
+      - SD2_D2:Y
+      - EQEP2S:Y
+      - SPI1_SIN:Y
+    modes:
+      - GPIO:40
+  GPIO10:
+    position: 65
+    type: I/O
+    signals:
+      - EPWM6_A:Y
+      - ADCSOCBO:Y
+      - CLKOUT:Y
+    modes:
+      - GPIO:10
+  GPIO3:
+    position: 66
+    type: I/O
+    signals:
+      - EPWM2_B:Y
+      - SPI1_SIN:Y
+      - SPI1_SOUT:Y
+    modes:
+      - GPIO:3
+  GPIO2:
+    position: 67
+    type: I/O
+    signals:
+      - EPWM2_A:Y
+      - LPTIM_1:Y
+    modes:
+      - GPIO:2
+  GPIO1:
+    position: 68
+    type: I/O
+    signals:
+      - EPWM1_B:Y
+      - LPTIM_2:Y
+      - COMP1_OUT:Y
+      - OUTPUTXBAR1:Y
+    modes:
+      - GPIO:1
+  GPIO0:
+    position: 69
+    type: I/O
+    signals:
+      - EPWM1_A:Y
+      - LPTIM_3:Y
+    modes:
+      - GPIO:0
+  VDDIO2:
+    position: 70
+    type: power
+  VSS4:
+    position: 71
+    type: power
+  VDD3:
+    position: 72
+    type: power
+  VREGENZ:
+    position: 73
+    type: power
+  GPIO34:
+    position: 74
+    type: I/O
+    signals:
+      - MCAN1_TX1:Y
+      - COMP2OUT:Y
+      - MCAN1_TX1:Y
+      - OUTPUTXBAR7:Y
+      - SCI2_RTS:Y
+    modes:
+      - GPIO:34
+  GPIO15:
+    position: 75
+    type: I/O
+    signals:
+      - SCI3_RX:Y
+      - SPI2_CS0:Y
+      - OUTPUTXBAR6:Y
+      - SPI1_CS0:Y
+    modes:
+      - GPIO:15
+  GPIO13:
+    position: 76
+    type: I/O
+    signals:
+      - MCAN1_CLK:Y
+      - MCAN2_TX0:Y
+      - SPI2_SOUT:Y
+      - OUTPUTXBAR4:Y
+      - SPI2_SIN:Y
+    modes:
+      - GPIO:13
+  GPIO14:
+    position: 77
+    type: I/O
+    signals:
+      - SCI3_TX:Y
+      - SPI2_CLK:Y
+      - OUTPUTXBAR5:Y
+    modes:
+      - GPIO:14
+  GPIO20:
+    position: 78
+    type: I/O
+    signals:
+      - EQEP1A:Y
+      - COMP1_OUT:Y
+      - EPWM7_B:Y
+      - OUTPUTXBAR1:Y
+    modes:
+      - GPIO:20
+  GPIO21:
+    position: 79
+    type: I/O
+    signals:
+      - EQEP1B:Y
+      - COMP2_OUT:Y
+      - OUTPUTXBAR2:Y
+    modes:
+      - GPIO:21
+  GPIO24:
+    position: 80
+    type: I/O
+    signals:
+      - SPI2_SOUT:Y
+      - SPI2_SIN:Y
+      - EWM_IN:Y
+      - I2C2_SCL:Y
+    modes:
+      - GPIO:24
