@@ -33,13 +33,8 @@
 {%- endblock %}
 
 {%- block define %}
-{%- for channel in used_channels %}
-    {%- set alias = CSP.project|gpio_channel_alias(channel) %}
-    {%- if alias %}
-
-#define {{ alias }}_PORT {{ port }} /*!< Alias for {{ port }} */
-#define {{ alias }}_PIN {{ pin }} /*!< Alias for {{ pin }} */
-    {%- endif %}
+{%- for pin_num in range(0, 64) %}
+#define GPIO{{ pin_num }} {{ pin_num }} /*!< GPIO pin {{ pin_num }} */
 {%- endfor %}
 {%- endblock %}
 
