@@ -9,9 +9,9 @@ chips:
               lowest: 1.9
               run: 421.0
             flash: 256
-            frequency: 140
+            frequency: 160
             io: 100
-            package: LQFP144
+            package: LQFP80
             peripherals:
               ADC 12-bit: 16
               MCAN: 1
@@ -30,7 +30,7 @@ chips:
               eCAP: 2
               WWDT: 1
               EWM: 1
-            ram: 128
+            ram: 32
             temperature:
               max: 105.0
               min: -40.0

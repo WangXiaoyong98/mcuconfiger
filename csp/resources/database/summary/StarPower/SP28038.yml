@@ -1,8 +1,8 @@
 name: SP28038
 clockTree: SP28038
 core: ARM Cortex-M4
-frequency: 140
-io: 100
+frequency: 160
+io: 80
 series: SP28038
 line: SP28038
 vendor: StarPower
@@ -23,12 +23,10 @@ hasPowerPad: false
 illustrate:
   en: |
     The **SP28038** series MCU is based on the **32-bit Arm® Cortex®-M4 core**,
-    with a maximum operating frequency of **140 MHz** and built-in **FPU (Floating Point Unit)**
-    for efficient arithmetic operations.
+    with a maximum operating frequency of **160 MHz** 
 
     ### Key Features
-    - **High-performance core**: 32-bit Arm® Cortex®-M4, up to 140 MHz
-    - **Hardware acceleration**: Supports **FPU** for floating-point calculations
+    - **High-performance core**: 32-bit Arm® Cortex®-M4, up to 160 MHz
     - **Enhanced peripherals**:
       - **EMMC controller** for external memory expansion
       - **MCAN** can be used simultaneously
@@ -37,16 +35,12 @@ illustrate:
       and fast Flash erase/program speed
 
     ### Certifications
-    - **IEC 61508 SIL2** functional safety certified (China)
     - Meets **industrial-grade reliability standards**
 
     ### Application Scenarios
-    - Model aircraft
-    - Handheld gimbals
-    - Barcode scanners
-    - Alarms and smart locks
-    - Electronic scales
-    - Industrial and IoT devices requiring performance and reliability
+    - Commonly Used MCUs in White Goods
+    - Automotive-Grade Motor Control
+    - Other Industrial and Consumer Applications
 
     ---
 
@@ -54,36 +48,31 @@ illustrate:
     is an ideal choice for industrial control, consumer electronics, and IoT applications.
 
   zh-cn: |
-    **SP28038** 系列 MCU 基于 **32 位 Arm® Cortex®-M4 内核**，最高工作主频可达 **140 MHz**，并内置 **FPU 浮点运算单元**，在性能与能效之间实现良好平衡。
+    **SP28038** 系列 MCU 基于 **32 位 Arm® Cortex®-M4 内核**，最高工作主频可达 **160 MHz**，在性能与能效之间实现良好平衡。
 
     ### 主要特性
-    - **高性能内核**：32 位 Arm® Cortex®-M4，主频 140 MHz
-    - **硬件加速**：支持 **FPU 浮点运算单元**
+    - **高性能内核**：32 位 Arm® Cortex®-M4，主频 160 MHz
     - **增强型外设**：
       - **EPWM 控制器**，用于PWM输出
       - **EMMC 控制器**，便于外部存储扩展
-      - ** CAN 接口 ** 可同时使用
+      - **CAN 接口** 可同时使用
     - **片上资源丰富**：集成存储器、定时器、ADC/DAC
     - **优秀的系统特性**：功耗低、容量大、可移植性好、Flash 擦除/编程速度快
 
     ### 认证与标准
-    - 已通过 **中国 IEC 61508 SIL2 功能安全认证**
     - 符合 **工业级高可靠性标准**
 
     ### 典型应用领域
-    - 航模飞机
-    - 手持云台
-    - 扫码枪
-    - 报警器、密码锁
-    - 电子秤
+    - 白家电常用MCU
+    - 车规级电机控制
     - 其他工业与消费类应用
 
     ---
 
     凭借其 **高性能与高可靠性**，**SP28038 系列 MCU** 是工业控制、消费电子和物联网应用的理想选择。
 introduction:
-  en: "A mainstream Arm Cortex-M4 value-line MCU featuring a 140 MHz CPU and 256 KB Flash"
-  zh-cn: 具有 256 KB Flash 和 140MHz CPU 的主流 Arm Cortex-M4 超值系列 MCU
+  en: "A mainstream Arm Cortex-M4 value-line MCU featuring a 160 MHz CPU and 256 KB Flash"
+  zh-cn: 具有 256 KB Flash 和 160MHz CPU 的主流 Arm Cortex-M4 超值系列 MCU
 modules:
   peripherals:
     CPU:
@@ -161,8 +150,8 @@ modules:
   middlewares: {}
 package: LQFP80
 url:
-  en: https://global.geehy.com/product/fifth/APM32F103
-  zh-cn: https://geehy.com/product/fifth/APM32F103
+  en: https://e.gitee.com/the-shanghai-trail/repos/the-shanghai-trail/sp2401-project-document/sources
+  zh-cn: https://e.gitee.com/the-shanghai-trail/repos/the-shanghai-trail/sp2401-project-document/sources
 builders:
   XMake:
     v2.8.1: [gcc-arm-none-eabi]
