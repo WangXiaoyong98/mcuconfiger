@@ -110,6 +110,21 @@ async function main() {
     return
   }
 
+  if (args.runMode === 'createProject') {
+    const summaryManagerPlugin = createSummaryManagerPlugin()
+    const ipManagerPlugin = createIpManagerPlugin()
+    const repositoryManagerPlugin = createRepositoryManagerPlugin()
+    
+    app.use(summaryManagerPlugin.plugin)
+    app.use(ipManagerPlugin.plugin)
+    app.use(repositoryManagerPlugin.plugin)
+    
+    await loadAllRoutes()
+    app.mount('#app')
+    window.electron.send('app:mounted')
+    return
+  }
+
   const packageManagerPlugin = createPackageManagerPlugin(serverManagerPlugin.manager)
   const clockTreeManagerPlugin = createClockTreeManagerPlugin()
   const summaryManagerPlugin = createSummaryManagerPlugin()

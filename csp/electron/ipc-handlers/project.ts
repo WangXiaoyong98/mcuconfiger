@@ -76,7 +76,7 @@ export function registerProjectHandler() {
     const win = BrowserWindow.fromWebContents(event.sender) as SystemBrowserWindow
     const data = win.userData!
     const projectPath = await createProject(path, project)
-    closeAllSubWindow()
     createWindow({ runMode: 'main', projectPath, backendUrl: data.backendUrl })
+    closeAllSubWindow()
   })
 }
