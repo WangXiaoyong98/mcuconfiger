@@ -31,7 +31,7 @@ import type { BrowserWindowArgsType, SystemBrowserWindow } from '@/electron/type
 import type { IpcMainEvent, IpcMainInvokeEvent } from 'electron'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
-import { app, BrowserWindow, ipcMain, shell } from 'electron'
+import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron'
 import { createWindow } from '../src/window'
 import { getExeFolder } from '../utils'
 
@@ -69,5 +69,8 @@ export function registerSystemHandler() {
   ipcMain.on('system:openDevTools', (event: IpcMainEvent) => {
     const win = BrowserWindow.fromWebContents(event.sender)
     win?.webContents.openDevTools()
+  })
+  ipcMain.on('system:showError', (_event, error: { title: string, message: string }) => {
+    dialog.showErrorBox(error.title, error.message)
   })
 }

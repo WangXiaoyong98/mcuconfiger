@@ -30,11 +30,32 @@
 import type { ProcessArgsType } from './types'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, dialog } from 'electron'
 import * as handlers from './ipc-handlers'
 import { createWindow } from './src/window'
 import { clientOffline, createServer, processArgs } from './utils'
+import { accessSync, constants, mkdirSync } from 'node:fs'
 import './src/cli'
+
+// 检查必要的权限
+function checkPermissions() {
+  try {
+    // 检查是否有写入配置文件的权限
+    const configDir = path.join(app.getPath('userData'), 'config')
+    mkdirSync(configDir, { recursive: true })
+    accessSync(configDir, constants.W_OK)
+    
+    // 检查是否有写入临时文件的权限
+    const tempDir = app.getPath('temp')
+    accessSync(tempDir, constants.W_OK)
+    
+    console.log('Permission check passed')
+  } catch (error) {
+    console.error('Permission check failed:', error)
+    dialog.showErrorBox('Permission Error', 'The application does not have sufficient permissions to run. Please run as administrator.')
+    app.quit()
+  }
+}
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -59,7 +80,9 @@ app.on('second-instance', (_event: Electron.Event, _argv: string[], _workingDire
 })
 
 app.on('window-all-closed', () => {
-  clientOffline(processArgs.backendUrl)
+  if (processArgs.backendUrl) {
+    clientOffline(processArgs.backendUrl)
+  }
   if (process.platform !== 'darwin') {
     app.quit()
   }
@@ -73,8 +96,15 @@ app.on('activate', async () => {
 })
 
 app.whenReady().then(async () => {
-  processArgs.backendUrl = await createServer()
-  createWindow(processArgs)
+  checkPermissions()
+  try {
+    processArgs.backendUrl = await createServer()
+    createWindow(processArgs)
+  } catch (error) {
+    console.error('Failed to start backend server:', error)
+    dialog.showErrorBox('Backend Server Error', `Failed to start backend server: ${error instanceof Error ? error.message : String(error)}\n\nPlease check if the server files are properly installed.`)
+    app.quit()
+  }
 })
 
 app.whenReady().then(() => {

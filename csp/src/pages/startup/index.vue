@@ -34,7 +34,7 @@ import { createWindow, openProject } from '~/utils'
 const i18n = useI18n()
 
 async function handNewProject() {
-  createWindow({ runMode: 'createProject', backendUrl: 'http://127.0.0.1:55432' })
+  createWindow({ runMode: 'createProject' })
 }
 
 async function handOpenProject() {

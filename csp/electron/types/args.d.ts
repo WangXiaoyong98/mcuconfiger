@@ -32,5 +32,5 @@ export type ProcessRunModeType = 'startup' | 'main' | 'createProject'
 interface ProcessArgsType {
   runMode: ProcessRunModeType
   projectPath?: string
-  backendUrl: string
+  backendUrl?: string
 }

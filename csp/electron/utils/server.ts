@@ -71,7 +71,11 @@ export function clientOffline(url: string) {
 export function createServer(): Promise<string> {
   return new Promise((resolve, reject) => {
     if (!app.isPackaged) {
-      resolve(processArgs.backendUrl)
+      if (processArgs.backendUrl) {
+        resolve(processArgs.backendUrl)
+      } else {
+        reject(new Error('Backend URL is not provided in development mode'))
+      }
       return
     }
 

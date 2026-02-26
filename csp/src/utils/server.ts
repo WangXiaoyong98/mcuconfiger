@@ -57,18 +57,39 @@ export interface PackageIndexResponseType {
 
 export class Server {
   private _url: string
-  private _socket: Socket
+  private _socket?: Socket
 
   constructor(url: string) {
     this._url = url
-    this._socket = io(url)
+    
+    if (!url) {
+      console.error('Backend URL is empty. Cannot connect to server.')
+      window.electron.send('system:showError', {
+        title: 'Backend Server Error',
+        message: 'Backend server URL is not available. Please restart the application.'
+      })
+      return
+    }
+    
+    this._socket = io(url, {
+      timeout: 5000,
+      reconnectionAttempts: 0
+    })
+
+    this._socket.on('connect_error', (error) => {
+      console.error('Failed to connect to backend server:', error)
+      window.electron.send('system:showError', {
+        title: 'Backend Server Error',
+        message: `Failed to connect to backend server at ${url}. Please check if the server is running.\n\nFix suggestions:\n1. Ensure the server files are properly installed\n2. Run the application as administrator\n3. Check if port 55432 is not blocked by firewall`
+      })
+    })
   }
 
   get url(): string {
     return this._url
   }
 
-  get socket(): Socket {
+  get socket(): Socket | undefined {
     return this._socket
   }
 
@@ -80,6 +101,12 @@ export class Server {
   ): Promise<CoderDumpResponseType> {
     return new Promise((resolve, reject) => {
       const socket = this._socket
+      if (!socket) {
+        const error = new Error('Backend server is not connected')
+        console.error('coderDump failed:', error)
+        reject(error)
+        return
+      }
       if (onProgress) {
         socket.on('coder/dump.progress', (progress: ArrayBuffer) => {
           const req = SioCoderDumpProgress.decode(new Uint8Array(progress))
@@ -119,8 +146,14 @@ export class Server {
     onProgress?: (count: number, index: number, file: string, write: boolean) => void,
     timeout = 2000,
   ): Promise<boolean> {
-    const socket = this._socket
     return new Promise((resolve, reject) => {
+      const socket = this._socket
+      if (!socket) {
+        const error = new Error('Backend server is not connected')
+        console.error('coderGenerate failed:', error)
+        reject(error)
+        return
+      }
       let timeoutId: ReturnType<typeof setTimeout> | null = null
 
       if (onProgress) {
@@ -169,9 +202,16 @@ export class Server {
 
   async packageList(): Promise<PackageIndexType> {
     return new Promise((resolve, reject) => {
-      this._socket.emit('sio/package/list')
+      const socket = this._socket
+      if (!socket) {
+        const error = new Error('Backend server is not connected')
+        console.error('packageList failed:', error)
+        reject(error)
+        return
+      }
+      socket.emit('sio/package/list')
 
-      this._socket.once('package/list.result', (response: ArrayBuffer) => {
+      socket.once('package/list.result', (response: ArrayBuffer) => {
         const resp = SioPackageListResponse.decode(new Uint8Array(response))
         if (resp.success) {
           resolve(resp.packages!)
@@ -186,6 +226,13 @@ export class Server {
 
   async getPackageDescription(type: string, name: string, version: string): Promise<PackageDescriptionType> {
     return new Promise((resolve, reject) => {
+      const socket = this._socket
+      if (!socket) {
+        const error = new Error('Backend server is not connected')
+        console.error('getPackageDescription failed:', error)
+        reject(error)
+        return
+      }
       const req = SioPackageDescriptionRequest.fromPartial({
         type,
         name,
@@ -193,9 +240,9 @@ export class Server {
       })
 
       const buf = SioPackageDescriptionRequest.encode(req).finish()
-      this._socket.emit('sio/package/description', buf)
+      socket.emit('sio/package/description', buf)
 
-      this._socket.once('package/description.result', (response: ArrayBuffer) => {
+      socket.once('package/description.result', (response: ArrayBuffer) => {
         const resp = SioPackageDescriptionResponse.decode(new Uint8Array(response))
         if (resp.success) {
           resolve(resp.description! as PackageDescriptionType)
@@ -213,8 +260,15 @@ export class Server {
     onProgress?: (count: number, index: number, file: string) => void,
   ): Promise<PackageDescriptionType> {
     return new Promise((resolve, reject) => {
+      const socket = this._socket
+      if (!socket) {
+        const error = new Error('Backend server is not connected')
+        console.error('packageInstall failed:', error)
+        reject(error)
+        return
+      }
       if (onProgress) {
-        this._socket.on('package/install.progress', (progress: ArrayBuffer) => {
+        socket.on('package/install.progress', (progress: ArrayBuffer) => {
           const req = SioPackageInstallProgress.decode(new Uint8Array(progress))
           onProgress(req.count, req.index, req.file)
         })
@@ -225,11 +279,11 @@ export class Server {
       })
 
       const buf = SioPackageInstallRequest.encode(req).finish()
-      this._socket.emit('sio/package/install', buf)
+      socket.emit('sio/package/install', buf)
 
-      this._socket.once('package/install.result', (response: ArrayBuffer) => {
+      socket.once('package/install.result', (response: ArrayBuffer) => {
         if (onProgress) {
-          this._socket.off('package/install.progress')
+          socket.off('package/install.progress')
         }
 
         const resp = SioPackageInstallResponse.decode(new Uint8Array(response))
@@ -246,6 +300,13 @@ export class Server {
 
   async packageUninstall(type: string, name: string, version: string): Promise<boolean> {
     return new Promise((resolve, reject) => {
+      const socket = this._socket
+      if (!socket) {
+        const error = new Error('Backend server is not connected')
+        console.error('packageUninstall failed:', error)
+        reject(error)
+        return
+      }
       const req = SioPackageUninstallRequest.fromPartial({
         type,
         name,
@@ -253,15 +314,15 @@ export class Server {
       })
 
       const buf = SioPackageUninstallRequest.encode(req).finish()
-      this._socket.emit('sio/package/uninstall', buf)
+      socket.emit('sio/package/uninstall', buf)
 
-      this._socket.once('package/uninstall.result', (response: ArrayBuffer) => {
+      socket.once('package/uninstall.result', (response: ArrayBuffer) => {
         const resp = SioPackageUninstallResponse.decode(new Uint8Array(response))
         if (resp.success) {
           resolve(true)
         }
         else {
-          console.error(`Failed to get package description: ${resp.error}`)
+          console.error(`Failed to uninstall package: ${resp.error}`)
           reject(new Error(resp.error))
         }
       })
@@ -275,8 +336,24 @@ export class ServerManager {
   private _server: Server | null = null
 
   async init() {
-    const url = await window.electron.invoke('server:getUrl')
-    this._server = markRaw(new Server(url))
+    try {
+      const url = await window.electron.invoke('server:getUrl')
+      if (url) {
+        this._server = markRaw(new Server(url))
+      } else {
+        console.error('Failed to get backend server URL')
+        window.electron.send('system:showError', {
+          title: 'Backend Server Error',
+          message: 'Failed to get backend server URL. Please restart the application.'
+        })
+      }
+    } catch (error) {
+      console.error('Error initializing server manager:', error)
+      window.electron.send('system:showError', {
+        title: 'Backend Server Error',
+        message: `Error initializing server connection: ${error instanceof Error ? error.message : String(error)}`
+      })
+    }
   }
 
   get server(): Server {
