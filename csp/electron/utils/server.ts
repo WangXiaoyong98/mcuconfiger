@@ -90,22 +90,50 @@ export function createServer(): Promise<string> {
 
       let process
       let commandUsed
-      
+      let exeFullPath = exePath
+
       if (fs.existsSync(exePath)) {
-        console.log('Using csp-server.exe')
+        console.log('Using csp-server.exe at:', exePath)
         commandUsed = 'csp-server.exe'
-        process = spawn('csp-server.exe', ['serve', '-p', '55432'], {
+        
+        // Create log directory if it doesn't exist
+        const logDir = path.join(serverFolder, 'log')
+        if (!fs.existsSync(logDir)) {
+          try {
+            fs.mkdirSync(logDir, { recursive: true })
+            console.log('Created log directory:', logDir)
+          } catch (error) {
+            console.error('Failed to create log directory:', error)
+          }
+        }
+        
+        process = spawn(exePath, ['serve', '-p', '55432'], {
           cwd: serverFolder,
+          env: { ...global.process.env, 'PYTHONUNBUFFERED': '1' }
         })
       } else if (fs.existsSync(pyPath)) {
-        console.log('Using csp-server.py with python')
+        console.log('Using csp-server.py with python at:', pyPath)
         commandUsed = 'python csp-server.py'
-        process = spawn('python', ['csp-server.py', 'serve', '-p', '55432'], {
+        
+        // Create log directory if it doesn't exist
+        const logDir = path.join(serverFolder, 'log')
+        if (!fs.existsSync(logDir)) {
+          try {
+            fs.mkdirSync(logDir, { recursive: true })
+            console.log('Created log directory:', logDir)
+          } catch (error) {
+            console.error('Failed to create log directory:', error)
+          }
+        }
+        
+        process = spawn('python', [pyPath, 'serve', '-p', '55432'], {
           cwd: serverFolder,
+          env: { ...global.process.env, 'PYTHONUNBUFFERED': '1' }
         })
       } else {
         const errorMsg = 'Neither csp-server.exe nor csp-server.py found'
         console.error(errorMsg)
+        console.error('Server folder path:', serverFolder)
         console.error('Files in server folder:', fs.readdirSync(serverFolder))
         reject(new Error(errorMsg))
         return
@@ -116,20 +144,16 @@ export function createServer(): Promise<string> {
       const timeout = setTimeout(() => {
         if (!resolved) {
           resolved = true
-          const errorMsg = `Server startup timeout after 5s using ${commandUsed}`
+          const errorMsg = `Server startup timeout after 10s using ${commandUsed}. Please check if the server has sufficient permissions and resources.`
           console.error(errorMsg)
           process.kill()
           reject(new Error(errorMsg))
         }
-      }, 5000)
+      }, 10000)
 
-      process.stdout!.on('data', (data: Buffer) => {
-        console.log('Server stdout:', data.toString())
-      })
-
-      process.stderr!.on('data', (data: Buffer) => {
+      const checkOutput = (data: Buffer) => {
         const text = data.toString()
-        console.log('Server stderr:', text)
+        console.log('Server output:', text)
         const match = text.match(/http:\/\/127\.0\.0\.1:(\d+)/)
         if (match) {
           const url = match[0]
@@ -142,27 +166,60 @@ export function createServer(): Promise<string> {
             resolve(url)
           }, 1000)
         }
-      })
+      }
+
+      process.stdout!.on('data', checkOutput)
+      process.stderr!.on('data', checkOutput)
 
       process.once('error', (err) => {
         if (!resolved) {
           resolved = true
           clearTimeout(timeout)
-          const errorMsg = `Failed to spawn server process: ${err.message}`
+          const errorMsg = `Failed to spawn server process: ${err.message}. Please check if the server has sufficient permissions and is not blocked by antivirus software. Server path: ${exeFullPath}`
           console.error(errorMsg)
           reject(new Error(errorMsg))
         }
       })
 
-      process.once('exit', (code) => {
+      process.once('exit', (code, signal) => {
         if (!resolved) {
           resolved = true
           clearTimeout(timeout)
-          const errorMsg = `Server exited with code ${code} using ${commandUsed}`
+          const errorMsg = `Server exited with code ${code}${signal ? ` (signal: ${signal})` : ''} using ${commandUsed}. Please check the server logs for more details. Server path: ${exeFullPath}. Working directory: ${serverFolder}`
           console.error(errorMsg)
           reject(new Error(errorMsg))
         }
       })
+
+      // Try to ping the server after a short delay to check if it's running
+      setTimeout(() => {
+        if (!resolved) {
+          console.log('Trying to ping server to check if it\'s running...')
+          try {
+            const http = require('http')
+            const req = http.get('http://127.0.0.1:55432', (res: any) => {
+              if (res.statusCode === 200) {
+                resolved = true
+                clearTimeout(timeout)
+                console.log('Server is running successfully at http://127.0.0.1:55432')
+                setTimeout(() => {
+                  clientOnline('http://127.0.0.1:55432')
+                  resolve('http://127.0.0.1:55432')
+                }, 1000)
+              }
+              res.resume()
+            })
+            req.on('error', () => {
+              // Server not responding yet, continue waiting
+            })
+            req.setTimeout(2000, () => {
+              req.destroy()
+            })
+          } catch (error) {
+            console.error('Error pinging server:', error)
+          }
+        }
+      }, 3000)
     }
     catch (error) {
       const errorMsg = `Error in createServer: ${error instanceof Error ? error.message : String(error)}`

@@ -241,6 +241,9 @@ export function getResourceFolder(): string {
 }
 
 export function getServerFolder(): string {
+  if (!app.isPackaged) {
+    return path.join(process.env.APP_ROOT!, 'server')
+  }
   return path.join(getResourceFolder(), 'server')
 }
 
