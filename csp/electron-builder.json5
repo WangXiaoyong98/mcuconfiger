@@ -52,6 +52,16 @@
     ],
     "extraFiles": [
       {
+        "from": "server/public",
+        "to": "resources/server/public",
+        "filter": ["**/*"]
+      },
+      {
+        "from": "server",
+        "to": "resources/server",
+        "filter": ["**/*.py", "**/__init__.py", "**/*.yaml", "**/*.yml", "**/*.json", "**/*.txt"]
+      },
+      {
         "from": "build-server/csp-server.dist",
         "to": "resources/server",
         "filter": ["**/*"]

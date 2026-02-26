@@ -648,8 +648,29 @@ def cli(trace: bool):
             }
         ]
     )
+    
+    # Use CSP_LOG_DIR environment variable if set, otherwise use exe_folder/log
+    import os
+    log_dir = os.environ.get('CSP_LOG_DIR')
+    if log_dir:
+        log_file = os.path.join(log_dir, f"csp-server-{today.year}-{today.month}.log")
+    else:
+        log_file = f"{SysUtils.exe_folder()}/log/csp-server-{today.year}-{today.month}.log"
+    
+    # Create log directory if it doesn't exist
+    log_file_dir = os.path.dirname(log_file)
+    if not os.path.exists(log_file_dir):
+        try:
+            os.makedirs(log_file_dir, exist_ok=True)
+        except Exception as e:
+            print(f"Failed to create log directory: {e}")
+            # Fallback to temp directory
+            import tempfile
+            log_dir = tempfile.gettempdir()
+            log_file = os.path.join(log_dir, f"csp-server-{today.year}-{today.month}.log")
+    
     logger.add(
-        f"{SysUtils.exe_folder()}/log/csp-server-{today.year}-{today.month}.log",
+        log_file,
         rotation="10 MB",
         level="TRACE",
     )

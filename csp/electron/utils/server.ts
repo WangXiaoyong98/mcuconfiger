@@ -85,50 +85,90 @@ export function createServer(): Promise<string> {
       const pyPath = path.join(serverFolder, 'csp-server.py')
 
       console.log('Server folder:', serverFolder)
+      console.log('Server folder exists:', fs.existsSync(serverFolder))
       console.log('Checking for csp-server.exe:', fs.existsSync(exePath))
       console.log('Checking for csp-server.py:', fs.existsSync(pyPath))
+      
+      // List files in server folder for debugging
+      try {
+        const files = fs.readdirSync(serverFolder)
+        console.log('Files in server folder:', files.slice(0, 20)) // Limit to first 20 files
+      } catch (error) {
+        console.error('Failed to read server folder:', error)
+      }
 
       let process
       let commandUsed
       let exeFullPath = exePath
 
+      // Get user data directory for writable storage
+      const userDataDir = app.getPath('userData')
+      const serverUserDataDir = path.join(userDataDir, 'server')
+      const logDir = path.join(serverUserDataDir, 'log')
+      
+      // Create user data directories if they don't exist
+      if (!fs.existsSync(serverUserDataDir)) {
+        try {
+          fs.mkdirSync(serverUserDataDir, { recursive: true })
+          console.log('Created server user data directory:', serverUserDataDir)
+        } catch (error) {
+          console.error('Failed to create server user data directory:', error)
+        }
+      }
+      
+      if (!fs.existsSync(logDir)) {
+        try {
+          fs.mkdirSync(logDir, { recursive: true })
+          console.log('Created log directory:', logDir)
+        } catch (error) {
+          console.error('Failed to create log directory:', error)
+        }
+      }
+      
+      // Also create a log directory in the server folder as a fallback
+      const serverLogDir = path.join(serverFolder, 'log')
+      if (!fs.existsSync(serverLogDir)) {
+        try {
+          fs.mkdirSync(serverLogDir, { recursive: true })
+          console.log('Created fallback log directory:', serverLogDir)
+        } catch (error) {
+          console.error('Failed to create fallback log directory:', error)
+        }
+      }
+      
       if (fs.existsSync(exePath)) {
         console.log('Using csp-server.exe at:', exePath)
         commandUsed = 'csp-server.exe'
         
-        // Create log directory if it doesn't exist
-        const logDir = path.join(serverFolder, 'log')
-        if (!fs.existsSync(logDir)) {
-          try {
-            fs.mkdirSync(logDir, { recursive: true })
-            console.log('Created log directory:', logDir)
-          } catch (error) {
-            console.error('Failed to create log directory:', error)
-          }
-        }
-        
+        // Use serverFolder as cwd to ensure server can find its dependencies
+        // But set TEMP environment variable to user data directory to avoid permission issues
         process = spawn(exePath, ['serve', '-p', '55432'], {
           cwd: serverFolder,
-          env: { ...global.process.env, 'PYTHONUNBUFFERED': '1' }
+          env: { 
+            ...global.process.env, 
+            'PYTHONUNBUFFERED': '1',
+            'CSP_USER_DATA_DIR': serverUserDataDir,
+            'CSP_LOG_DIR': logDir,
+            'TEMP': logDir,
+            'TMP': logDir
+          }
         })
       } else if (fs.existsSync(pyPath)) {
         console.log('Using csp-server.py with python at:', pyPath)
         commandUsed = 'python csp-server.py'
         
-        // Create log directory if it doesn't exist
-        const logDir = path.join(serverFolder, 'log')
-        if (!fs.existsSync(logDir)) {
-          try {
-            fs.mkdirSync(logDir, { recursive: true })
-            console.log('Created log directory:', logDir)
-          } catch (error) {
-            console.error('Failed to create log directory:', error)
-          }
-        }
-        
+        // Use serverFolder as cwd to ensure server can find its dependencies
+        // But set TEMP environment variable to user data directory to avoid permission issues
         process = spawn('python', [pyPath, 'serve', '-p', '55432'], {
           cwd: serverFolder,
-          env: { ...global.process.env, 'PYTHONUNBUFFERED': '1' }
+          env: { 
+            ...global.process.env, 
+            'PYTHONUNBUFFERED': '1',
+            'CSP_USER_DATA_DIR': serverUserDataDir,
+            'CSP_LOG_DIR': logDir,
+            'TEMP': logDir,
+            'TMP': logDir
+          }
         })
       } else {
         const errorMsg = 'Neither csp-server.exe nor csp-server.py found'
@@ -154,9 +194,17 @@ export function createServer(): Promise<string> {
       const checkOutput = (data: Buffer) => {
         const text = data.toString()
         console.log('Server output:', text)
-        const match = text.match(/http:\/\/127\.0\.0\.1:(\d+)/)
+        
+        // Check for error messages
+        if (text.includes('error') || text.includes('Error') || text.includes('ERROR')) {
+          console.error('Server error detected:', text)
+          // Don't immediately reject, wait for timeout to handle it
+        }
+        
+        // Match both 127.0.1.x and 127.0.0.1 formats, with optional prefix
+        const match = text.match(/(?:Serving on )?http:\/\/(127\.0\.(?:0|1)\.1):(\d+)/)
         if (match) {
-          const url = match[0]
+          const url = match[0].replace('Serving on ', '')
           resolved = true
           clearTimeout(timeout)
           console.log('Server started successfully at:', url)
@@ -170,6 +218,15 @@ export function createServer(): Promise<string> {
 
       process.stdout!.on('data', checkOutput)
       process.stderr!.on('data', checkOutput)
+      
+      // Also log the server's PID and environment variables for debugging
+      console.log('Server process PID:', process.pid)
+      console.log('Server environment variables:', {
+        'CSP_USER_DATA_DIR': serverUserDataDir,
+        'CSP_LOG_DIR': logDir,
+        'TEMP': logDir,
+        'TMP': logDir
+      })
 
       process.once('error', (err) => {
         if (!resolved) {
