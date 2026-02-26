@@ -144,7 +144,7 @@ export class Server {
     output?: string,
     files?: string[],
     onProgress?: (count: number, index: number, file: string, write: boolean) => void,
-    timeout = 2000,
+    timeout = 30000,
   ): Promise<boolean> {
     return new Promise((resolve, reject) => {
       const socket = this._socket

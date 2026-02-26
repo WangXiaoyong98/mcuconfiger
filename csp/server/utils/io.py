@@ -38,7 +38,7 @@ class IoUtils:
     def readlines(path: str) -> list[str]:
         if not os.path.exists(path):
             return []
-        with open(path, "r") as f:
+        with open(path, "r", encoding="utf-8") as f:
             return f.readlines()
 
     @staticmethod
