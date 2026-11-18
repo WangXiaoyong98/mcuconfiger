@@ -45,7 +45,8 @@ import type { VueI18nType } from '~/i18n'
 import type { Project, ProjectConfigsPinUnitType } from '~/utils'
 import { computed, inject, markRaw, shallowRef, watch, watchEffect } from 'vue'
 import { I18n } from '~/i18n'
-import { Express } from '~/utils'
+import { Express } from '~/utils/express'
+import { allocateSignals, pathsOverlap } from '~/utils/pinmux'
 
 // #region typedef
 
@@ -68,19 +69,16 @@ export class Ip {
     public locale: WritableComputedRef<string>,
     public summary: Summary,
   ) {
+    if (_instance.startsWith(this.name))
+      this._ip_suffix = _instance.slice(this.name.length)
+    if (_instance.endsWith(this.name))
+      this._ip_prefixed = _instance.slice(0, -this.name.length)
+
     this.activated = shallowRef(this.buildActivated())
     this._parameters = this.buildParameters()
     this._containers = new IpContainers(this._origin.containers ?? {}, this._parameters, this)
     this._presets = this.buildPresets()
     this._diagrams = new IpDiagramsObject(this._origin.diagrams, this)
-
-    if (_instance.startsWith(this.name)) {
-      this._ip_prefixed = _instance.replace(new RegExp(`^${this.name}`), '')
-    }
-
-    if (_instance.endsWith(this.name)) {
-      this._ip_suffix = _instance.replace(new RegExp(`${this.name}$`), '')
-    }
 
     watchEffect(() => {
       if (this.activated.value) {
@@ -254,7 +252,7 @@ export class Ip {
 
   private _onProjectConfigChanged(payload: { path: string[], newValue: any, oldValue: any }) {
     const changedPath = payload.path.join('.')
-    if (this._activatedDependencies.some(dep => changedPath.startsWith(dep))) {
+    if (this._activatedDependencies.some(dep => pathsOverlap(changedPath, dep))) {
       const condition = this.getExpression(this._origin.activated ?? '')
       const value = this._express.evaluateExpression<boolean>(condition, this.project().origin, false) ?? false
       if (value !== this.activated.value) {
@@ -335,7 +333,7 @@ export class IpParameterBase {
       return this._origin.enabled
     }
     else {
-      const condition = this._origin.enabled
+      const condition = this._parent.getExpression(this._origin.enabled)
       const result = this._parent.express().evaluateExpression<boolean>(condition, this._parent.project().origin, false) ?? false
 
       const set = new Set<string>()
@@ -351,8 +349,8 @@ export class IpParameterBase {
 
   private _onProjectConfigChanged(payload: { path: string[], newValue: any, oldValue: any }) {
     const changedPath = payload.path.join('.')
-    if (this._enableDependencies.some(dep => changedPath.startsWith(dep))) {
-      const condition = this._origin.enabled as string
+    if (this._enableDependencies.some(dep => pathsOverlap(changedPath, dep))) {
+      const condition = this._parent.getExpression(this._origin.enabled as string)
       const value = this._parent.express().evaluateExpression<boolean>(condition, this._parent.project().origin, false) ?? false
       if (value !== this.enabled.value) {
         this.enabled.value = value
@@ -435,23 +433,19 @@ export class IpParameterValueUnit {
   })
 
   private checkAvailability(): { available: boolean, conflicts: Record<string, string> } {
-    const conflicts: Record<string, string> = {}
-    const pins = this._parent.project().configs.get<Record<string, ProjectConfigsPinUnitType>>('pins', {})
-
-    for (const signalName of Object.keys(this.signals ?? {})) {
-      const pinNames = this._parent.summary.findPinsBySignals([signalName])
-      for (const pinName of pinNames) {
-        const pinConfig = pins[pinName]
-        if (pinConfig && pinConfig.locked === true && pinConfig.function !== signalName) {
-          conflicts[pinName] = pinConfig.function ?? ''
-        }
-      }
-    }
-
-    return {
-      available: Object.keys(conflicts).length === 0,
-      conflicts,
-    }
+    const configs = this._parent.project().configs
+    void configs.revision.value
+    const pins = configs.get<Record<string, ProjectConfigsPinUnitType>>('pins', {})
+    const requests = Object.keys(this.signals ?? {}).map(signal => ({
+      signal,
+      pins: this._parent.summary.findPinsBySignals([signal]),
+    }))
+    const result = allocateSignals(requests, pins)
+    const conflicts = Object.fromEntries(result.conflicts.map(signal => [
+      signal,
+      this._parent.summary.findPinsBySignals([signal]).join(', ') || 'No pin mapping',
+    ]))
+    return { available: result.success, conflicts }
   }
 
   private buildEnable(): boolean {
@@ -462,7 +456,7 @@ export class IpParameterValueUnit {
       return this._origin.enabled
     }
     else {
-      const condition = this._origin.enabled
+      const condition = this._parent.getExpression(this._origin.enabled)
       const result = this._parent.express().evaluateExpression<boolean>(condition, this._parent.project().origin, false) ?? false
 
       const set = new Set<string>()
@@ -478,8 +472,8 @@ export class IpParameterValueUnit {
 
   private _onProjectConfigChanged(payload: { path: string[], newValue: any, oldValue: any }) {
     const changedPath = payload.path.join('.')
-    if (this._enableDependencies.some(dep => changedPath.startsWith(dep))) {
-      const condition = this._origin.enabled as string
+    if (this._enableDependencies.some(dep => pathsOverlap(changedPath, dep))) {
+      const condition = this._parent.getExpression(this._origin.enabled as string)
       const value = this._parent.express().evaluateExpression<boolean>(condition, this._parent.project().origin, false) ?? false
       if (value !== this.enabled.value) {
         this.enabled.value = value
@@ -549,9 +543,9 @@ export class IpParameterEnum extends IpParameterBase {
   private _onProjectConfigsChanged(payload: { path: string[], newValue: any, oldValue: any }) {
     const path = payload.path.join('.')
     if (path === this._path) {
-      this._value.value = payload.newValue
+      this._value.value = payload.newValue ?? this.default
     }
-    else if (this._path.startsWith(path)) {
+    else if (this._path.startsWith(`${path}.`)) {
       this._value.value = this._parent.project().configs.get(this._path, this.default)
     }
   }
@@ -624,11 +618,11 @@ export class IpParameterNumber extends IpParameterBase {
 
   private _onProjectChanged(payload: { path: string[], newValue: any, oldValue: any }) {
     const changedPath = payload.path.join('.')
-    if (this._dependencies.max?.some(dep => changedPath.startsWith(dep))) {
+    if (this._dependencies.max?.some(dep => pathsOverlap(changedPath, dep))) {
       this.max.value = this.buildValueFromHook('max', Number.MAX_SAFE_INTEGER)
     }
 
-    if (this._dependencies.min?.some(dep => changedPath.startsWith(dep))) {
+    if (this._dependencies.min?.some(dep => pathsOverlap(changedPath, dep))) {
       this.min.value = this.buildValueFromHook('min', Number.MIN_SAFE_INTEGER)
     }
   }
@@ -647,9 +641,9 @@ export class IpParameterNumber extends IpParameterBase {
   private _onProjectConfigsChanged(payload: { path: string[], newValue: any, oldValue: any }) {
     const path = payload.path.join('.')
     if (path === this._path) {
-      this._value.value = payload.newValue
+      this._value.value = payload.newValue ?? this.default
     }
-    else if (this._path.startsWith(path)) {
+    else if (this._path.startsWith(`${path}.`)) {
       this._value.value = this._parent.project().configs.get(this._path, this.default)
     }
   }
@@ -678,9 +672,9 @@ export class IpParameterBoolean extends IpParameterBase {
   private _onProjectConfigsChanged(payload: { path: string[], newValue: any, oldValue: any }) {
     const path = payload.path.join('.')
     if (path === this._path) {
-      this._value.value = payload.newValue
+      this._value.value = payload.newValue ?? this.default
     }
-    else if (this._path.startsWith(path)) {
+    else if (this._path.startsWith(`${path}.`)) {
       this._value.value = this._parent.project().configs.get(this._path, this.default)
     }
   }
@@ -709,9 +703,9 @@ export class IpParameterString extends IpParameterBase {
   private _onProjectConfigsChanged(payload: { path: string[], newValue: any, oldValue: any }) {
     const path = payload.path.join('.')
     if (path === this._path) {
-      this._value.value = payload.newValue
+      this._value.value = payload.newValue ?? this.default
     }
-    else if (this._path.startsWith(path)) {
+    else if (this._path.startsWith(`${path}.`)) {
       this._value.value = this._parent.project().configs.get(this._path, this.default)
     }
   }
@@ -878,6 +872,9 @@ rcm_apb1_timers_mul_t:
             p.value.value = (this.default.value as string)
           }
         }
+        else if (isNumberParameter(p)) {
+          p.value.value = p.getValue(p.value.value)
+        }
       },
     )
   }
@@ -917,7 +914,7 @@ rcm_apb1_timers_mul_t:
   })
 
   readonly = computed((): boolean => {
-    return (this._origin.readonly ?? this.parameter.value.readonly ?? false) || !this.condition.value
+    return (this._origin.readonly ?? this.parameter.value.readonly ?? false) || !this.condition.value || !this.parameter.value.enabled.value
   })
 
   parameter = computed((): IpParameter => this._parameter.value)
@@ -943,7 +940,7 @@ rcm_apb1_timers_mul_t:
 
   private _onProjectConfigChanged(payload: { path: string[], newValue: any, oldValue: any }) {
     const changedPath = payload.path.join('.')
-    if (this._dependencies.some(dep => changedPath.startsWith(dep))) {
+    if (this._dependencies.some(dep => pathsOverlap(changedPath, dep))) {
       const condition = this._parent.getExpression(this._origin.condition ?? '')
       const value = this._express.evaluateExpression<boolean>(condition, this._parent.project().origin, false) ?? false
       if (value !== this.condition.value) {
@@ -1027,7 +1024,6 @@ export class IpCondition<T> {
 
     for (const item of this._origin) {
       const condition = this._parent.getExpression(item.condition)
-      item.condition = condition
       this._map[condition] = item.content
 
       if (condition !== 'default') {
@@ -1057,11 +1053,11 @@ export class IpCondition<T> {
 
   current = computed(() => this._map[this._key.value] ?? null)
 
-  index = computed(() => this._origin.findIndex(item => item.condition === this._key.value))
+  index = computed(() => this._origin.findIndex(item => this._parent.getExpression(item.condition) === this._key.value))
 
   private _onProjectConfigChanged(payload: { path: string[], newValue: any, oldValue: any }) {
     const changedPath = payload.path.join('.')
-    if (this._dependencies.some(dep => changedPath.startsWith(dep))) {
+    if (this._dependencies.some(dep => pathsOverlap(changedPath, dep))) {
       let key = 'default'
       for (const condition of Object.keys(this._map)) {
         if (condition !== 'default') {
@@ -1159,6 +1155,10 @@ export class IpManager {
     else {
       return null
     }
+  }
+
+  getPeripherals(vendor: string): Ip[] {
+    return Object.values(this._map.peripherals[vendor] ?? {})
   }
 
   async loadPeripheral(vendor: string, name: string, define: string, summary: Summary) {

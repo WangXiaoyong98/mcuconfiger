@@ -17,6 +17,8 @@
 # ------------------------------------------------------------------------------
 #
 
+import re
+from pathlib import Path
 from typing import Literal
 
 from csp.project import Project
@@ -24,7 +26,6 @@ from csp.project import Project
 # --< user code begin import, do not change this comment!
 # isort: off
 import json
-import yaml
 
 # isort: on
 # --> user code end import, do not change this comment!
@@ -246,8 +247,8 @@ def get_gpio_number_from_chip_db(
         if os.path.exists(db_path):
             # 读取芯片数据库文件
             with open(db_path, 'r', encoding='utf-8') as f:
-                import yaml
-                chip_data = yaml.safe_load(f)
+                from ruamel.yaml import YAML
+                chip_data = YAML(typ="safe").load(f)
             
             # 获取引脚信息
             chip_pins = chip_data.get('pins', {}) if chip_data else {}
@@ -318,12 +319,11 @@ def gpio_used_channels(project: Project) -> list[str]:
     channels = gpio_channels(project)
     for channel in channels:
         function = pin_function(project, channel)
-        
+
         # 检查function是否非空且通道名不以"RCM-"开头
-        if (
-            len(function) != 0  # function != ""
-            and not channel.startswith("RCM-")  # name startswith "RCM-"
-        ):
+        if len(function) != 0 and not channel.startswith(  # function != ""
+            "RCM-"
+        ):  # name startswith "RCM-"
             pins.append(channel)
 
     pins.sort()
@@ -579,10 +579,10 @@ def gpio_channel_pad_config(project: Project, channel: str) -> str:
         # 获取各种GPIO配置选项
         pin_type = project.configs.get(f"GPIO.{channel}.gpio_pin_type_t", "")
         direction = project.configs.get(f"GPIO.{channel}.gpio_direction_t", "input")
-        
+
         # 初始化宏列表
         macros = []
-        
+
         # 根据pin_type添加相应的宏
         if pin_type == "open_drain":
             macros.append("GPIO_PIN_TYPE_OD")
@@ -590,36 +590,42 @@ def gpio_channel_pad_config(project: Project, channel: str) -> str:
             macros.append("GPIO_PIN_TYPE_PULLUP")
         elif pin_type == "pulldown":
             macros.append("GPIO_PIN_TYPE_PULLDOWN")
-        
+
         # 检查驱动强度
-        drive_strength = project.configs.get(f"GPIO.{channel}.gpio_drive_strength_t", "low")
+        drive_strength = project.configs.get(
+            f"GPIO.{channel}.gpio_drive_strength_t", "low"
+        )
         if drive_strength == "high":
             macros.append("GPIO_PIN_TYPE_DRE")
-        
+
         # 检查转换率
         slew_rate = project.configs.get(f"GPIO.{channel}.gpio_slew_rate_t", "low")
         if slew_rate == "high":
             macros.append("GPIO_PIN_TYPE_SRE")
-        
+
         # 检查输入施密特触发器
-        current_source = project.configs.get(f"GPIO.{channel}.gpio_current_source_t", "false")
+        current_source = project.configs.get(
+            f"GPIO.{channel}.gpio_current_source_t", "false"
+        )
         if current_source == "true":
             macros.append("GPIO_PIN_TYPE_CSE")
-        
+
         # 检查输入使能
-        input_enable = project.configs.get(f"GPIO.{channel}.gpio_input_enable_t", "true")
+        input_enable = project.configs.get(
+            f"GPIO.{channel}.gpio_input_enable_t", "true"
+        )
         if input_enable == "true":
             macros.append("GPIO_PIN_TYPE_IE")
-        
+
         # 检查开源输出
         open_source = project.configs.get(f"GPIO.{channel}.gpio_open_source_t", "false")
         if open_source == "true":
             macros.append("GPIO_PIN_TYPE_OSE")
-        
+
         # 如果没有添加任何宏，使用默认值
         if not macros:
-            return "GPIO_PIN_TYPE_IE"
-        
+            return "0U"
+
         # 组合宏
         return " | ".join(macros)
     except Exception:
@@ -627,9 +633,16 @@ def gpio_channel_pad_config(project: Project, channel: str) -> str:
 
 
 def gpio_channel_qualification_mode(project: Project, channel: str) -> str:
-    # 直接返回默认值，不处理滤波长度相关配置
-    return "GPIO_QUAL_SYNC"
-
+    value = project.configs.get(f"GPIO.{channel}.gpio_qualification_mode_t", "sync")
+    modes = {
+        "sync": "GPIO_QUAL_SYNC",
+        "three_sample": "GPIO_QUAL_3SAMPLE",
+        "six_sample": "GPIO_QUAL_6SAMPLE",
+        "async": "GPIO_QUAL_ASYNC",
+    }
+    if value not in modes:
+        raise ValueError(f"Unsupported GPIO qualification mode: {value}")
+    return modes[value]
 
 
 def gpio_eventout_channels(project: Project, channels: list[str]) -> list[str]:
@@ -655,3 +668,42 @@ def gpio_eint_channels(project: Project, channels: list[str]) -> list[str]:
 
 
 # --> user code end code, do not change this comment!
+
+
+def sp28038_pin_configurations(project: Project) -> list[dict]:
+    """Resolve the selected physical pin against the bundled vendor mux table."""
+    header = Path(__file__).resolve().parents[3] / "libraries/std_drivers/src/pin_map.h"
+    macros = set(
+        re.findall(
+            r"^#define\s+(GPIO_\w+)\s+", header.read_text(encoding="utf-8"), re.M
+        )
+    )
+    rows = []
+    used_signals = set()
+    for channel, config in project.configs.get("pins", {}).items():
+        function = config.get("function", "")
+        if not function:
+            continue
+        number = extract_gpio_number_from_pin_name(channel)
+        if number is None:
+            raise ValueError(f"Unsupported pin: {channel}")
+        is_gpio = function == f"GPIO:{number}"
+        signal = channel if is_gpio else function.split(":", 1)[0]
+        macro = f"GPIO_{number}_{signal}"
+        if macro not in macros:
+            raise ValueError(f"No vendor pin mapping for {channel}: {function}")
+        if not is_gpio and signal in used_signals:
+            raise ValueError(f"Signal assigned more than once: {signal}")
+        used_signals.add(signal)
+        rows.append(
+            {
+                "pin": int(number),
+                "macro": macro,
+                "direction": (
+                    gpio_channel_direction(project, channel) if is_gpio else None
+                ),
+                "pad": gpio_channel_pad_config(project, channel),
+                "qualification": gpio_channel_qualification_mode(project, channel),
+            }
+        )
+    return sorted(rows, key=lambda row: row["pin"])

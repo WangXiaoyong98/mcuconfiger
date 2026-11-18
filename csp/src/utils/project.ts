@@ -39,7 +39,7 @@ import type { Summary, SummaryManager } from '~/database'
 import type { UseI18nType, VueI18nType } from '~/i18n'
 import mitt from 'mitt'
 import semver from 'semver'
-import { computed, inject, markRaw, reactive, shallowReactive, shallowRef, watchEffect } from 'vue'
+import { computed, inject, markRaw, nextTick, reactive, shallowReactive, shallowRef, watchEffect } from 'vue'
 import pkg from '~/../package.json'
 import { Express } from './express'
 import { showOpenDialog } from './io'
@@ -161,10 +161,11 @@ export class Project {
   }
 
   async save() {
-    this._setDirty(false)
-    await saveProject(this.origin)
-    /*! < 保存后更新快照 */
-    this._updateSnapshot()
+    await nextTick()
+    const snapshot = JSON.stringify(this.origin)
+    await saveProject(JSON.parse(snapshot))
+    this._snapshot = snapshot
+    this._checkDirtyState()
   }
 
   path(): string {
@@ -246,6 +247,7 @@ export interface ProjectConfigsPinUnitType {
 export class ProjectConfigs {
   private _emitter = mitt<ProjectConfigsEventType>()
   private _pathCache = new Map<string, string[]>()
+  readonly revision = shallowRef(0)
 
   constructor(
     private _origin: Record<string, any>,
@@ -265,7 +267,7 @@ export class ProjectConfigs {
     let item: any = this._origin
 
     for (const key of keys) {
-      if (!(key in item)) {
+      if (item === null || typeof item !== 'object' || !(key in item)) {
         return defaultValue
       }
       item = item[key]
@@ -279,7 +281,7 @@ export class ProjectConfigs {
     let item: any = this._origin
 
     for (const key of keys.slice(0, -1)) {
-      if (!(key in item)) {
+      if (item[key] === null || typeof item[key] !== 'object') {
         item[key] = {}
       }
       item = item[key]
@@ -297,6 +299,7 @@ export class ProjectConfigs {
       delete item[lastKey]
     }
 
+    this.revision.value++
     this._emitter.emit('changed', { path: keys, newValue: value, oldValue: old })
   }
 

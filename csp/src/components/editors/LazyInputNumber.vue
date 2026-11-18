@@ -63,6 +63,8 @@ watch(
 )
 
 function commit() {
+  if (props.disabled || !Number.isFinite(tempValue.value) || !valid.value)
+    return
   emit('update:modelValue', tempValue.value)
   emit('change', tempValue.value)
 }

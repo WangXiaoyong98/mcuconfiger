@@ -29,7 +29,7 @@
 
 <script lang="ts" setup>
 import type { ClockTreeNode, IpParameterEnum } from '~/database'
-import { Handle, Position, useNodeConnections, useNodesData, useVueFlow } from '@vue-flow/core'
+import { Handle, Position, useVueFlow } from '@vue-flow/core'
 import { computed, toValue, watchEffect } from 'vue'
 import { isValidSourceConnection, isValidTargetConnection } from './CtUtils'
 
@@ -44,37 +44,16 @@ interface PropsType {
 const props = defineProps<PropsType>()
 
 const { updateNodeData } = useVueFlow()
-const sourceConnections = useNodeConnections({
-  handleType: 'target',
-})
-const sourceData = useNodesData(() => sourceConnections.value[0]?.source)
-
 const parameter = computed(
   (): IpParameterEnum | null => {
     const p = toValue(props.node.parameter)
-    if (p.type === 'enum') {
+    if (p?.type === 'enum') {
       return p as IpParameterEnum
     }
     return null
   },
 )
 
-const mathFunctions = {
-  '+': (a: number, b: number) => a + b,
-  '-': (a: number, b: number) => a - b,
-  '*': (a: number, b: number) => a * b,
-  '/': (a: number, b: number) => a / b,
-}
-
-const input = computed((): number => {
-  const data = sourceData.value
-  if (data) {
-    return data.data.output
-  }
-  else {
-    return 0
-  }
-})
 const title = computed((): string => parameter.value?.display.value || props.id)
 const value = computed({
   get: (): string => parameter.value?.value.value ?? '',
@@ -86,18 +65,7 @@ const value = computed({
 })
 
 watchEffect(() => {
-  let output = input.value
-
-  if (value.value) {
-    const operator = value.value.charAt(0) as keyof typeof mathFunctions /* !< 解析运算符，例如 "*2" -> "*" */
-    const operand = Number.parseFloat(value.value.slice(1)) /* !< 解析操作数，例如 "*2" -> 2 */
-
-    if (mathFunctions[operator] && !Number.isNaN(operand)) { /* !< 输入验证和处理 */
-      output = mathFunctions[operator](input.value, operand)
-    }
-  }
-
-  updateNodeData(props.id, { output }, { replace: false })
+  updateNodeData(props.id, { output: props.node.output.value }, { replace: false })
 })
 </script>
 
@@ -105,12 +73,13 @@ watchEffect(() => {
   <div class="title">
     {{ title }}
   </div>
-  <el-select v-model="value" class="nodrag">
+  <el-select v-model="value" class="nodrag" :disabled="node.readonly.value">
     <el-option
-      v-for="[k, v] in Object.entries(parameter?.values ?? {})"
+      v-for="[k, v] in Object.entries(node.refParameter.value?.values.value ?? {})"
       :key="k"
       :value="k"
       :label="v.comment.value"
+      :disabled="!v.enabled.value"
     />
   </el-select>
   <Handle

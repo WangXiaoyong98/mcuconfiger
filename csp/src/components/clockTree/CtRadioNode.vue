@@ -29,7 +29,7 @@
 
 <script lang="ts" setup>
 import type { ClockTreeNode, IpParameterEnum } from '~/database'
-import { Handle, Position, useNodeConnections, useNodesData, useVueFlow } from '@vue-flow/core'
+import { Handle, Position, useVueFlow } from '@vue-flow/core'
 import { computed, toValue, watch } from 'vue'
 import { isValidSourceConnection, isValidTargetConnection } from './CtUtils'
 
@@ -44,11 +44,6 @@ interface PropsType {
 const props = defineProps<PropsType>()
 
 const { updateNodeData } = useVueFlow()
-const sourceConnections = useNodeConnections({
-  handleType: 'target',
-})
-const sourceData = useNodesData(() => sourceConnections.value.map(connection => connection.source))
-
 const layoutParams = {
   containerPadding: 8, /* !< padding: 8px 16px */
   radioGap: 8, /* !< gap: 8px */
@@ -59,7 +54,7 @@ const layoutParams = {
 const parameter = computed(
   (): IpParameterEnum | null => {
     const p = toValue(props.node.parameter)
-    if (p.type === 'enum') {
+    if (p?.type === 'enum') {
       return p as IpParameterEnum
     }
     return null
@@ -69,7 +64,7 @@ const options = computed(
   (): Record<string, { label: string, target: string, enabled: boolean }> => {
     if (parameter.value) {
       const rtn: Record<string, { label: string, target: string, enabled: boolean }> = {}
-      for (const [k, v] of Object.entries(parameter.value.values)) {
+      for (const [k, v] of Object.entries(props.node.refParameter.value?.values.value ?? {})) {
         rtn[k] = { label: toValue(v.comment), target: `target-${k}`, enabled: v.enabled.value }
       }
       return rtn
@@ -87,21 +82,8 @@ const value = computed({
   },
 })
 
-const input = computed((): number => {
-  const target = options.value[value.value]?.target
-  if (!target)
-    return 0
-
-  const connection = sourceConnections.value.find(conn => conn.targetHandle === target)
-  if (!connection)
-    return 0
-
-  const nodeData = sourceData.value.find(node => node.id === connection.source)
-  return nodeData?.data?.output ?? 0
-})
-
 watch(
-  () => input.value,
+  () => props.node.output.value,
   (v: number) => {
     updateNodeData(props.id, { output: v }, { replace: false })
   },
@@ -112,7 +94,7 @@ watch(
   () => value.value,
   (v: string) => {
     const option = options.value[v]!
-    if (!option.enabled) {
+    if (option && !option.enabled) {
       console.error(`option ${v} is disabled`)
     }
     updateNodeData(props.id, { selectedValue: v }, { replace: false })
@@ -179,7 +161,7 @@ function calculateRadioGroupCenter(): string {
   <div class="title">
     {{ title }}
   </div>
-  <el-radio-group v-model="value" class="nodrag">
+  <el-radio-group v-model="value" class="nodrag" :disabled="node.readonly.value">
     <el-radio
       v-for="([k, v], index) of Object.entries(options)"
       :key="index"

@@ -29,8 +29,8 @@
 
 <script lang="ts" setup>
 import type { ClockTreeNode, IpParameterNumber } from '~/database'
-import { Handle, Position, useNodeConnections, useNodesData } from '@vue-flow/core'
-import { computed, toValue, watch } from 'vue'
+import { Handle, Position } from '@vue-flow/core'
+import { computed, toValue } from 'vue'
 import { isValidTargetConnection } from './CtUtils'
 
 interface PropsType {
@@ -40,41 +40,17 @@ interface PropsType {
 
 const props = defineProps<PropsType>()
 
-const sourceConnections = useNodeConnections({
-  handleType: 'target',
-})
-
-const sourceData = useNodesData(() => sourceConnections.value[0]?.source)
-
 const parameter = computed(
   (): IpParameterNumber | null => {
     const p = toValue(props.node.parameter)
-    if (p.type === 'float' || p.type === 'integer') {
+    if (p && (p.type === 'float' || p.type === 'integer')) {
       return p as IpParameterNumber
     }
     return null
   },
 )
 const title = computed((): string => parameter.value?.display.value || props.id)
-const value = computed((): number => {
-  const data = sourceData.value
-  if (data) {
-    return data.data.output
-  }
-  else {
-    return 0
-  }
-})
-
-watch(
-  () => value.value,
-  (v: number) => {
-    if (parameter.value) {
-      parameter.value.value.value = v
-    }
-  },
-  { immediate: true },
-)
+const value = computed(() => props.node.output.value)
 </script>
 
 <template>
@@ -82,7 +58,7 @@ watch(
     {{ title }}
   </div>
   <UnitInput
-    v-model="value"
+    :model-value="value"
     class="nodrag"
     :unit="node.unit"
     :readonly="true"

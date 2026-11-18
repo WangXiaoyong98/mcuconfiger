@@ -29,7 +29,7 @@
 
 <script lang="ts" setup>
 import type { ClockTreeNode, IpParameterNumber } from '~/database'
-import { Handle, Position, useNodeConnections, useNodesData, useVueFlow } from '@vue-flow/core'
+import { Handle, Position, useVueFlow } from '@vue-flow/core'
 import { computed, toValue, watch } from 'vue'
 import { isValidSourceConnection, isValidTargetConnection } from './CtUtils'
 
@@ -44,50 +44,20 @@ interface PropsType {
 const props = defineProps<PropsType>()
 
 const { updateNodeData } = useVueFlow()
-const sourceConnections = useNodeConnections({
-  handleType: 'target',
-})
-const sourceData = useNodesData(() => sourceConnections.value[0]?.source)
-
 const parameter = computed(
   (): IpParameterNumber | null => {
     const p = toValue(props.node.parameter)
-    if (['integer', 'float'].includes(p.type)) {
+    if (p && ['integer', 'float'].includes(p.type)) {
       return p as IpParameterNumber
     }
     return null
   },
 )
-const input = computed((): number => {
-  const data = sourceData.value
-  if (data) {
-    return data.data.output
-  }
-  else {
-    return 0
-  }
-})
 const title = computed((): string => parameter.value?.display.value || props.id)
-const value = computed({
-  get: (): number => parameter.value?.value.value ?? 0,
-  set: (value: number) => {
-    if (parameter.value) {
-      parameter.value.value.value = value
-    }
-  },
-})
-
-watch(
-  () => input.value,
-  (v: number) => {
-    updateNodeData(props.id, { output: v }, { replace: false })
-    value.value = v
-    if (parameter.value) {
-      parameter.value.value.value = v
-    }
-  },
-  { immediate: true },
-)
+const value = computed(() => props.node.output.value)
+watch(value, (output) => {
+  updateNodeData(props.id, { output }, { replace: false })
+}, { immediate: true })
 </script>
 
 <template>
@@ -95,7 +65,7 @@ watch(
     {{ title }}
   </div>
   <UnitInput
-    v-model="value"
+    :model-value="value"
     class="nodrag"
     :unit="node.unit"
     :readonly="true"

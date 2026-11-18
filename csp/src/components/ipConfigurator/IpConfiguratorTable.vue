@@ -63,7 +63,7 @@ const models = shallowRef<ModelType[]>([])
 const tableRef = shallowRef<InstanceType<typeof ElTable>>()
 const currentIp = shallowRef<Ip | null>(null)
 
-project.configs.emitter.on('changed', _onProjectConfigsChanged.bind(this))
+project.configs.emitter.on('changed', _onProjectConfigsChanged)
 watch(
   () => props.instance,
   (_newVal, _oldVal) => {
@@ -110,7 +110,7 @@ function tr(parameter: IpParameter | ComputedRef<IpParameter>): string | number 
   }
 
   if (parameter.type === 'enum') {
-    return (parameter as IpParameterEnum).values[parameter.value.value as string].comment.value
+    return (parameter as IpParameterEnum).values[parameter.value.value as string]?.comment.value ?? parameter.value.value
   }
 
   return parameter.value.value
@@ -122,6 +122,10 @@ function handCurrentChange(newSelection: ModelType | null, _oldSelection: ModelT
       emit('pinSelect', newSelection ? [newSelection.name] : [])
     }
     emit('select', newSelection ? [newSelection.name] : [])
+  }
+  else {
+    emit('pinSelect', [])
+    emit('select', [])
   }
 }
 
@@ -136,13 +140,12 @@ function createModels(ip: Ip): ModelType[] {
     const names = Object.keys(project.configs.get('pins', {}))
     for (const name of names) {
       const pin = pins[name]
-      // 只显示功能为 GPIO 的引脚
-      if (!pin.function.value || pin.function.value.startsWith('GPIO:')) {
+      if (pin?.function.value) {
         ms.push({
           name,
           key: name,
           refParameters: pin.refParameters.value,
-          pin: pin,
+          pin,
         })
       }
     }
@@ -170,6 +173,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  project.configs.emitter.off('changed', _onProjectConfigsChanged)
   cleanUpCurrentIp()
 })
 </script>
@@ -197,7 +201,7 @@ onBeforeUnmount(() => {
       v-for="[prop, label] in Object.entries(titles)"
       :key="prop"
       :label="label"
-      :min-width="50"
+      :min-width="110"
       :show-overflow-tooltip="true"
     >
       <template #default="{ row }: { row: ModelType }">
@@ -243,7 +247,7 @@ onBeforeUnmount(() => {
 }
 
 ::v-deep(.cell) {
-  text-wrap: nowrap;
+  white-space: nowrap;
   text-overflow: ellipsis;
 }
 

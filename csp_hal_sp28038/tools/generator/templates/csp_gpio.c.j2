@@ -24,82 +24,24 @@
  #}
 {%- extends "csp-file-base.c.j2" %}
 
-{%- set used_channels = CSP.project|gpio_channels() %}
-{%- set used_ports = used_channels|gpio_used_ports() %}
-{%- set eint_channels = CSP.project|gpio_eint_channels(used_channels) %}
-{%- set eventout_channels = CSP.project|gpio_eventout_channels(used_channels) %}
-{%- set eventout_eint_channels = eint_channels + eventout_channels %}
+{%- set pins = CSP.project|sp28038_pin_configurations %}
 
 {%- block includes %}
 #include "csp_gpio.h"
+#include "pin_map.h"
 {%- endblock %}
 
 {%- block function_body %}
 void csp_gpio_init(void)
 {
-{%- if eint_channels|length() > 0 %}
-    EINT_Config_T eint_config = {0};
+{%- for pin in pins %}
+    /* GPIO{{ pin.pin }} */
+    GPIO_setPinConfig({{ pin.macro }});
+{%- if pin.direction %}
+    GPIO_setDirectionMode({{ pin.pin }}U, {{ pin.direction }});
 {%- endif %}
-{#  #}
-
-
-{%- for port in used_ports %}
-    {%- for channels_group in CSP.project|gpio_channels_group_by_port(used_channels, port) %}
-{#  #}
-    /**************************************************************************/
-    {%- set pins = channels_group|gpio_channels_to_pins() %}
-    /*!< configure the {{ port }}<{{ pins|join(", ") }}>. */
-
-    {%- for channel in channels_group %}
-        /*!< configure the GPIO direction. */
-        GPIO_setDirectionMode({{ channel }}, {{ CSP.project|gpio_channel_direction(channel) }});
-        
-        /*!< configure the GPIO PAD. */
-        GPIO_setPadConfig({{ channel }}, {{ CSP.project|gpio_channel_pad_config(channel) }});
-        
-        /*!< configure the GPIO Qualification Mode. */
-        GPIO_setQualificationMode({{ channel }}, {{ CSP.project|gpio_channel_qualification_mode(channel) }});
-    {%- endfor %}
-    {%- endfor %}
+    GPIO_setPadConfig({{ pin.pin }}U, {{ pin.pad }});
+    GPIO_setQualificationMode({{ pin.pin }}U, {{ pin.qualification }});
 {%- endfor %}
-
-{%- if eint_channels|length > 0 %}
-    {%- for channel in eint_channels %}
-{#  #}
-    /**************************************************************************/
-        {%- set port = channel|gpio_channel_to_port() %}
-        {%- set pin = channel|gpio_channel_to_pin() %}
-        {%- set port_source = channel|gpio_channel_to_port_source() %}
-        {%- set pin_source = channel|gpio_channel_to_pin_source() %}
-        {%- set eint_line = channel|gpio_channel_to_eint_line() %}
-    /*!< selects the {{ port }}<{{ pin }}> used as eint. */
-    GPIO_ConfigEINTLine({{ port_source }}, {{ pin_source }});
-
-    eint_config.line = {{ eint_line }};
-    eint_config.mode = {{ CSP.project|gpio_channel_eint_mode(channel) }};
-    eint_config.trigger = {{ CSP.project|gpio_channel_eint_trigger(channel) }};
-    eint_config.lineCmd = ENABLE;
-    EINT_Config(&eint_config);
-
-    // TODO: NVIC
-    {%- endfor %}
-{%- endif %}
-
-{%- if eventout_channels|length > 0 %}
-    {%- for channel in eventout_channels %}
-{#  #}
-    /**************************************************************************/
-        {%- set port = channel|gpio_channel_to_port() %}
-        {%- set pin = channel|gpio_channel_to_pin() %}
-        {%- set port_source = channel|gpio_channel_to_port_source() %}
-        {%- set pin_source = channel|gpio_channel_to_pin_source() %}
-    /*!< selects the {{ port }}<{{ pin }}> used as event output. */
-    GPIO_ConfigEventOutput({{ port_source }}, {{ pin_source }});
-    {%- endfor %}
-
-    /**************************************************************************/
-    /*!< enables the event output. */
-    GPIO_EnableEventOutput();
-{%- endif %}
 }
 {%- endblock %}

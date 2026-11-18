@@ -36,6 +36,7 @@ import type {
   FileProgressDialogInstance,
   SaveAsProjectDialogInstance,
 } from './instance'
+import type PackageInstaller from './PackageInstaller.vue'
 import { MenuBar } from '@imengyu/vue3-context-menu'
 import { ElNotification } from 'element-plus'
 import Mousetrap from 'mousetrap'
@@ -48,8 +49,6 @@ import {
   openDevTools,
   openProject,
   setProjectPath,
-  showOpenDialog,
-  usePackageManager,
   useProjectManager,
   useServerManager,
   useSettingsManager,
@@ -63,7 +62,7 @@ const route = useRoute()
 const i18n = useI18n()
 const { t } = i18n
 const settings = useSettingsManager()
-const packageManager = usePackageManager()
+const packageInstaller = shallowRef<InstanceType<typeof PackageInstaller>>()
 
 const project = projectManager.get()!
 
@@ -253,59 +252,7 @@ function handJumpToPackageManager() {
 }
 
 async function handInstallPackage() {
-  const { filePaths, canceled } = await showOpenDialog(
-    {
-      title: t('message.installPackage'),
-      filters: [
-        { name: t('fileType.csppack'), extensions: ['csppack'] },
-      ],
-    },
-  )
-
-  if (canceled || !filePaths) {
-    return
-  }
-
-  if (filePaths.length !== 1) {
-    return
-  }
-
-  const packagePath = filePaths[0]
-
-  fileProgressDialog.value?.show(t('label.installing'))
-  fileProgressDialog.value?.reset()
-
-  try {
-    await severManager.server.packageInstall(
-      packagePath,
-      (count: number, index: number, file: string) => {
-        fileProgressDialog.value?.updateProgress(count, index, file)
-      },
-    ).then(() => {
-      ElNotification({
-        title: t('label.success'),
-        message: t('message.installSuccess'),
-        duration: 3000,
-        offset: 35,
-        type: 'success',
-      })
-      packageManager.reload()
-      handJumpToPackageManager()
-    })
-  }
-  catch (error) {
-    console.error(t('message.installFailed'), error)
-    ElNotification({
-      title: t('label.error'),
-      message: t('message.installFailed'),
-      duration: 0,
-      offset: 35,
-      type: 'error',
-    })
-  }
-  finally {
-    fileProgressDialog.value?.hide()
-  }
+  await packageInstaller.value?.install()
 }
 
 onMounted(() => {
@@ -337,6 +284,7 @@ defineExpose({
 <template>
   <MenuBar :options="menuData" />
   <FileProgressDialog ref="fileProgressDialog" />
+  <PackageInstaller ref="packageInstaller" @installed="handJumpToPackageManager" />
   <AboutDialog ref="aboutDialog" />
   <AuthorDialog ref="authorDialog" />
   <SaveAsProjectDialog ref="saveAsProjectDialog" />

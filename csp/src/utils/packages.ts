@@ -206,40 +206,97 @@ export class PackageIndex {
 // #endregion
 
 export class PackageManager {
-  private _packageIndex: PackageIndex | null = null
+  private _packageIndex = markRaw(new PackageIndex({}))
   private _server: Server
   private _descriptionCache: Record<string, PackageDescription> = markRaw({})
+  private _revision = 0
+  private _reloadPromise: Promise<void> | null = null
+  readonly loading = shallowRef(false)
+  readonly error = shallowRef('')
+  readonly busy = shallowRef(false)
 
   constructor(server: Server) {
     this._server = markRaw(server)
   }
 
   async init() {
-    this._packageIndex = markRaw(new PackageIndex(await this._server.packageList().catch(() => {
-      return {}
-    })))
+    // Let the application open even if the backend is unavailable; the page offers retry.
+    await this.reload().catch(() => {})
   }
 
   get packageIndex(): PackageIndex {
-    return this._packageIndex!
+    return this._packageIndex
   }
 
-  async getPackageDescription(kind: string, name: string, version: string): Promise<PackageDescription | undefined> {
-    if (this._descriptionCache[`${kind}/${name}/${version}`]) {
-      return this._descriptionCache[`${kind}/${name}/${version}`]
-    }
-
-    const description = await this._server.getPackageDescription(kind, name, version).catch(() => undefined)
-    if (description) {
-      this._descriptionCache[`${kind}/${name}/${version}`] = markRaw(new PackageDescription(description))
-    }
-    return this._descriptionCache[`${kind}/${name}/${version}`]
+  async getPackageDescription(kind: string, name: string, version: string): Promise<PackageDescription> {
+    const key = JSON.stringify([kind, name, version])
+    if (this._descriptionCache[key])
+      return this._descriptionCache[key]
+    const revision = this._revision
+    const description = markRaw(new PackageDescription(await this._server.getPackageDescription(kind, name, version)))
+    if (revision === this._revision)
+      this._descriptionCache[key] = description
+    return description
   }
 
-  async reload() {
-    this._packageIndex?.update(markRaw(await this._server.packageList().catch(() => {
-      return {}
-    })))
+  reload(): Promise<void> {
+    if (this._reloadPromise)
+      return this._reloadPromise
+    this.loading.value = true
+    this.error.value = ''
+    this._reloadPromise = Promise.resolve().then(() => this._server.packageList()).then((data) => {
+      this._revision++
+      this._descriptionCache = markRaw({})
+      this._packageIndex.update(markRaw(data))
+    }).catch((error: unknown) => {
+      this.error.value = error instanceof Error ? error.message : String(error)
+      throw error
+    }).finally(() => {
+      this.loading.value = false
+      this._reloadPromise = null
+    })
+    return this._reloadPromise
+  }
+
+  async install(path: string, onProgress?: (count: number, index: number, file: string) => void) {
+    if (this.busy.value)
+      throw new Error('Another package operation is in progress')
+    this.busy.value = true
+    try {
+      const description = await this._server.packageInstall(path, onProgress)
+      // A refresh started before installation may still contain the old index.
+      await this._reloadPromise?.catch(() => {})
+      await this.reload().catch(() => {})
+      return description
+    }
+    finally {
+      this.busy.value = false
+    }
+  }
+
+  async uninstall(kind: string, name: string, version: string) {
+    if (this.busy.value)
+      throw new Error('Another package operation is in progress')
+    this.busy.value = true
+    try {
+      await this._server.packageUninstall(kind, name, version)
+      await this._reloadPromise?.catch(() => {})
+      const data: PackageIndexType = JSON.parse(JSON.stringify(this.packageIndex.origin.value))
+      if (data[kind]?.[name]) {
+        delete data[kind][name][version]
+        if (!Object.keys(data[kind][name]).length)
+          delete data[kind][name]
+        if (!Object.keys(data[kind]).length)
+          delete data[kind]
+      }
+      this._revision++
+      this._descriptionCache = markRaw({})
+      this._packageIndex.update(data)
+      await this.reload().catch(() => {})
+    }
+    finally {
+      this.busy.value = false
+    }
   }
 }
 

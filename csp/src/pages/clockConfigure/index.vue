@@ -30,8 +30,12 @@
 <script setup lang="ts">
 import type { ClockViewInstance } from '~/components/instance'
 import { nextTick, shallowRef } from 'vue'
+import { useClockTreeManager } from '~/database'
+import { useProjectManager } from '~/utils'
 
 const clockViewRef = shallowRef<ClockViewInstance>()
+const project = useProjectManager().get()
+const clock = project ? useClockTreeManager().get(project.vendor, project.targetChip) : null
 
 function handZoomIn() {
   clockViewRef.value?.zoomIn()
@@ -54,9 +58,29 @@ async function handDownload() {
 
 <template>
   <div class="main-div flex">
-    <div class="clock-div flex">
-      <ClockView ref="clockViewRef" />
-    </div>
+    <el-empty v-if="!clock" :description="$t('configuration.noClock')" />
+    <template v-else>
+      <el-collapse class="clock-settings">
+        <el-collapse-item :title="$t('configuration.clockSources')" name="sources">
+          <IpConfigurator type="modes" :instance="clock.instance" />
+        </el-collapse-item>
+      </el-collapse>
+      <el-alert
+        v-if="clock.calculation.value.issues.length"
+        :title="$t('configuration.clockIssues')"
+        type="warning"
+        :closable="false"
+        show-icon
+      >
+        <div v-for="issue in clock.calculation.value.issues" :key="`${issue.node}-${issue.reason}`">
+          {{ clock.nodes[issue.node]?.parameter.value?.display.value || issue.node }}:
+          {{ $t(`configuration.${issue.reason}`) }}
+        </div>
+      </el-alert>
+      <div class="clock-div flex">
+        <ClockView ref="clockViewRef" />
+      </div>
+    </template>
     <div class="my-4 items-center justify-center" style="text-align: center;">
       <el-tooltip :content="$t('command.zoomIn')">
         <el-button circle @click="handZoomIn">
@@ -84,6 +108,7 @@ async function handDownload() {
 
 <style scoped>
 .main-div {
+  display: flex;
   flex: 1;
   flex-direction: column;
   min-width: 0;
@@ -91,8 +116,20 @@ async function handDownload() {
 }
 
 .clock-div {
+  display: flex;
   flex: 1;
   min-width: 0;
   min-height: 0;
+}
+
+.clock-settings :deep(.ep-collapse-item__content) {
+  max-height: 240px;
+  overflow: auto;
+}
+
+.main-div > .ep-alert {
+  max-height: 150px;
+  overflow: auto;
+  flex-shrink: 0;
 }
 </style>

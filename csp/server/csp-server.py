@@ -61,7 +61,8 @@ from utils.project import ProjectUtils
 from utils.sys import SysUtils
 
 app = Flask("csp-server")
-socketio = SocketIO(app, cors_allowed_origins="*")
+# The local backend is stateless; let Flask own its session instead of copying it.
+socketio = SocketIO(app, cors_allowed_origins="*", manage_session=False)
 client_online = {}
 
 
@@ -384,6 +385,12 @@ def sio_coder_generate(data: bytes):
         )
 
 
+def _package_response(event: str, data: bytes, to: str) -> bytes:
+    # Keep result events for older clients, and acknowledge this specific request.
+    socketio.emit(event, data, to=to)
+    return data
+
+
 @socketio.on("sio/package/install")
 def sio_package_install(data: bytes):
     # args: (path: str)
@@ -400,7 +407,7 @@ def sio_package_install(data: bytes):
 
     if not isinstance(arg_path, str):
         logger.error(f"Called with invalid path: {arg_path!r}")
-        socketio.emit(
+        return _package_response(
             "package/install.result",
             sio_package_install_pb2.SioPackageInstallResponse(
                 success=False,
@@ -408,20 +415,18 @@ def sio_package_install(data: bytes):
             ).SerializeToString(),
             to=sid,
         )
-        return
 
     try:
         package_desc = action_package_install(arg_path, False, False, sid, socketio)
         if package_desc is None:
-            socketio.emit(
+            return _package_response(
                 "package/install.result",
                 sio_package_install_pb2.SioPackageInstallResponse(
                     success=False,
-                    error="Unknown error, please see more in server log",
+                    error="The selected file or folder is not a valid CSP package. Check the .csppdsc description file and server log.",
                 ).SerializeToString(),
                 to=sid,
             )
-            return
 
         # Convert PackageDescription to protobuf Description
         description = sio_package_description_pb2.Description()
@@ -453,7 +458,7 @@ def sio_package_install(data: bytes):
         author_pb.website.github = author.website.github
         description.author.CopyFrom(author_pb)
 
-        socketio.emit(
+        return _package_response(
             "package/install.result",
             sio_package_install_pb2.SioPackageInstallResponse(
                 success=True,
@@ -463,7 +468,7 @@ def sio_package_install(data: bytes):
         )
     except Exception as e:
         logger.exception(f"Install failed: {str(e)!r}")
-        socketio.emit(
+        return _package_response(
             "package/install.result",
             sio_package_install_pb2.SioPackageInstallResponse(
                 success=False,
@@ -493,7 +498,7 @@ def sio_package_uninstall(data: bytes):
     try:
         result = action_package_uninstall(arg_type, arg_name, arg_version)
         if result:
-            socketio.emit(
+            return _package_response(
                 "package/uninstall.result",
                 sio_package_uninstall_pb2.SioPackageUninstallResponse(
                     success=True,
@@ -501,7 +506,7 @@ def sio_package_uninstall(data: bytes):
                 to=sid,
             )
         else:
-            socketio.emit(
+            return _package_response(
                 "package/uninstall.result",
                 sio_package_uninstall_pb2.SioPackageUninstallResponse(
                     success=False,
@@ -511,7 +516,7 @@ def sio_package_uninstall(data: bytes):
             )
     except Exception as e:
         logger.exception(f"Uninstall failed: {str(e)!r}")
-        socketio.emit(
+        return _package_response(
             "package/uninstall.result",
             sio_package_uninstall_pb2.SioPackageUninstallResponse(
                 success=False,
@@ -529,7 +534,7 @@ def sio_package_list():
     logger.trace(f"{sid!r} calling sio/package/list")
     try:
         result = action_package_list()
-        socketio.emit(
+        return _package_response(
             "package/list.result",
             sio_package_list_pb2.SioPackageListResponse(
                 success=True,
@@ -539,7 +544,7 @@ def sio_package_list():
         )
     except Exception as e:
         logger.exception(f"List failed: {str(e)!r}")
-        socketio.emit(
+        return _package_response(
             "package/list.result",
             sio_package_list_pb2.SioPackageListResponse(
                 success=False,
@@ -567,15 +572,14 @@ def sio_package_description(data: bytes):
     try:
         package_desc = action_package_description(arg_type, arg_name, arg_version)
         if package_desc is None:
-            socketio.emit(
+            return _package_response(
                 "package/description.result",
                 sio_package_description_pb2.SioPackageDescriptionResponse(
                     success=False,
-                    error="Unknown error, please see more in server log",
+                    error=f"Package description not found: {arg_type}:{arg_name}@{arg_version}",
                 ).SerializeToString(),
                 to=sid,
             )
-            return
 
         # Convert PackageDescription to protobuf Description
         description = sio_package_description_pb2.Description()
@@ -607,7 +611,7 @@ def sio_package_description(data: bytes):
         author_pb.website.github = author.website.github
         description.author.CopyFrom(author_pb)
 
-        socketio.emit(
+        return _package_response(
             "package/description.result",
             sio_package_description_pb2.SioPackageDescriptionResponse(
                 success=True,
@@ -617,7 +621,7 @@ def sio_package_description(data: bytes):
         )
     except Exception as e:
         logger.exception(f"Description failed: {str(e)!r}")
-        socketio.emit(
+        return _package_response(
             "package/description.result",
             sio_package_description_pb2.SioPackageDescriptionResponse(
                 success=False,
@@ -648,15 +652,18 @@ def cli(trace: bool):
             }
         ]
     )
-    
+
     # Use CSP_LOG_DIR environment variable if set, otherwise use exe_folder/log
     import os
-    log_dir = os.environ.get('CSP_LOG_DIR')
+
+    log_dir = os.environ.get("CSP_LOG_DIR")
     if log_dir:
         log_file = os.path.join(log_dir, f"csp-server-{today.year}-{today.month}.log")
     else:
-        log_file = f"{SysUtils.exe_folder()}/log/csp-server-{today.year}-{today.month}.log"
-    
+        log_file = (
+            f"{SysUtils.exe_folder()}/log/csp-server-{today.year}-{today.month}.log"
+        )
+
     # Create log directory if it doesn't exist
     log_file_dir = os.path.dirname(log_file)
     if not os.path.exists(log_file_dir):
@@ -666,9 +673,12 @@ def cli(trace: bool):
             print(f"Failed to create log directory: {e}")
             # Fallback to temp directory
             import tempfile
+
             log_dir = tempfile.gettempdir()
-            log_file = os.path.join(log_dir, f"csp-server-{today.year}-{today.month}.log")
-    
+            log_file = os.path.join(
+                log_dir, f"csp-server-{today.year}-{today.month}.log"
+            )
+
     logger.add(
         log_file,
         rotation="10 MB",

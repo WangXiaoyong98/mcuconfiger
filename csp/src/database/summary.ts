@@ -151,12 +151,15 @@ export class Summary {
   get moduleList(): Record<string, SummaryModuleUnit> {
     if (!this._moduleList) {
       this._moduleList = {}
-      for (const group of [this.modules.peripherals, this.modules.middlewares]) {
-        for (const groupMap of Object.values(group)) {
-          for (const [name, unit] of Object.entries(groupMap)) {
-            this._moduleList[name] = unit
-          }
+      const collect = (modules: Record<string, SummaryModuleUnit>) => {
+        for (const [name, unit] of Object.entries(modules)) {
+          if (unit.define)
+            this._moduleList![name] = unit
+          collect(unit.children)
         }
+      }
+      for (const group of [this.modules.peripherals, this.modules.middlewares]) {
+        collect(group)
       }
     }
     return this._moduleList

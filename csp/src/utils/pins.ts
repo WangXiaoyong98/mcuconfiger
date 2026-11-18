@@ -29,9 +29,10 @@
 
 import type { App, ComputedRef, ShallowReactive } from 'vue'
 import type { Project, ProjectConfigsPinUnitType, ProjectManager } from './project'
-import type { Ip, IpManager, IpParameter, IpRefParameter, SummaryManager, SummaryPin } from '~/database'
-import { computed, inject, markRaw, shallowReactive } from 'vue'
-import { IpObject } from '~/database'
+import type { Ip, IpManager, IpParameter, IpRefParameter, Summary, SummaryManager, SummaryPin } from '~/database'
+import { computed, inject, markRaw, shallowReactive, watchEffect } from 'vue'
+import { IpObject, isEnumParameter } from '~/database/ip'
+import { allocateSignals } from './pinmux'
 
 export class Pin {
   private _parameters: Record<string, ComputedRef<IpParameter>>
@@ -70,6 +71,18 @@ export class Pin {
     })
 
     this._project.configs.emitter.on('changed', this._onProjectConfigsChanged.bind(this))
+
+    watchEffect(() => {
+      if (!this.function.value)
+        return
+      const direction = this.parameters.gpio_direction_t?.value
+      const pad = this.parameters.gpio_pin_type_t?.value
+      if (direction && pad && isEnumParameter(pad)) {
+        const allowed = direction.value.value === 'output' ? ['push_pull', 'open_drain'] : ['pullup', 'pulldown']
+        if (!allowed.includes(pad.value.value) && allowed[0] in pad.values)
+          pad.value.value = allowed[0]
+      }
+    })
   }
 
   get name(): string {
@@ -100,10 +113,10 @@ export class Pin {
       const parts = key.split(':')
       // 对于 GPIO 功能，直接返回一个固定的预设名称
       // 这样不管选择输入还是输出，都会显示所有配置选项
-      if (parts[0] === 'GPIO') {
-        return 'Input'
+      if (parts[0] === this._ip.instance) {
+        return this.parameters.gpio_direction_t?.value.value.value === 'output' ? 'Output' : 'Input'
       }
-      return parts[1]
+      return this.presets[parts[1]] ? parts[1] : 'Input'
     }
     return 'unknown'
   })
@@ -151,16 +164,13 @@ export class Pin {
     this._project.configs.set<ProjectConfigsPinUnitType>(this._path, {})
   }
 
-  setFunction(func: string, mode: string = '') {
-    const seqs = func.split(':')
-    const instance = seqs[0]
-    const state = seqs[1]
-    let locked = false
-    if (instance === this._ip.instance && this.modes.includes(func)) {
-      locked = true
-      // 确保state存在且对应的preset存在
-      if (state && this.presets[state]) {
-        const presets = this.presets[state]
+  setFunction(func: string, mode: string = '', locked = true) {
+    if (!this.functions.includes(func))
+      return
+    if (func !== this.function.value) {
+      const state = (mode || func).split(':')[1]
+      const presets = this.presets[state] ?? this.presets.Input
+      if (presets) {
         const models: Record<string, any> = {}
         for (const [key, refParameter] of Object.entries(presets.refParameters.value)) {
           models[key] = refParameter.default.value
@@ -204,8 +214,8 @@ export class Pin {
     else if (path === this._lockedPath) {
       this._item.locked = payload.newValue
     }
-    else if (path === this._path) {
-      const value: ProjectConfigsPinUnitType = payload.newValue ?? {}
+    else if (path === this._path || this._path.startsWith(`${path}.`)) {
+      const value = this._project.configs.get<ProjectConfigsPinUnitType>(this._path, {})
       this._item.function = value.function ?? ''
       this._item.mode = value.mode ?? ''
       this._item.label = value.label ?? ''
@@ -217,12 +227,85 @@ export class Pin {
 
 export class PinsManager {
   private _pins: Record<string, Pin> = markRaw({})
+  private _project?: Project
+  private _summary?: Summary
+  private _ips: Ip[] = []
+  private _managedSignals = new Set<string>()
 
   constructor() {
   }
 
   get pins(): Record<string, Pin> {
     return this._pins
+  }
+
+  requirements = computed(() => {
+    const signals = new Map<string, string>()
+    for (const ip of this._ips) {
+      if (ip.isPinIp || !ip.activated.value)
+        continue
+      const refs = { ...ip.containers.modes.refParameters.value, ...ip.containers.configurations.refParameters.value, ...ip.containers.clockTree.refParameters.value }
+      for (const ref of Object.values(refs)) {
+        const parameter = ref.parameter.value
+        if (ref.condition.value && parameter.enabled.value && isEnumParameter(parameter)) {
+          for (const [name, signal] of Object.entries(parameter.signals.value ?? {}))
+            signals.set(name, signal.mode)
+        }
+      }
+    }
+    return signals
+  })
+
+  allocation = computed(() => {
+    void this._project?.configs.revision.value
+    return allocateSignals([...this.requirements.value.keys()].map(signal => ({
+      signal,
+      pins: this._summary?.findPinsBySignals([signal]) ?? [],
+    })), this._project?.configs.get('pins', {}) ?? {})
+  })
+
+  init(project: Project, summary: Summary, ipManager: IpManager) {
+    this._project = project
+    this._summary = summary
+    this._ips = ipManager.getPeripherals(project.vendor)
+    watchEffect(() => {
+      const result = this.allocation.value
+      if (!result.success)
+        return
+      const assigned = new Set(Object.values(result.assignments))
+      for (const pin of Object.values(this.pins)) {
+        if (!pin.locked.value && this._managedSignals.has(pin.function.value) && !assigned.has(pin.name))
+          pin.unsetFunction()
+      }
+      for (const [signal, name] of Object.entries(result.assignments)) {
+        const pin = this.pins[name]
+        const mode = this.requirements.value.get(signal) ?? ''
+        if (pin.function.value !== signal || (!pin.locked.value && pin.mode.value !== mode))
+          pin.setFunction(signal, mode, false)
+      }
+      this._managedSignals = new Set(this.requirements.value.keys())
+    })
+  }
+
+  assign(name: string, func: string): 'locked' | 'duplicate' | 'unsupported' | null {
+    const pin = this.pins[name]
+    if (!pin || (func && !pin.functions.includes(func)))
+      return 'unsupported'
+    if (pin.function.value === func)
+      return null
+    if (pin.locked.value)
+      return 'locked'
+    if (func && !pin.modes.includes(func)) {
+      const duplicate = Object.values(this.pins).find(other => other.name !== name && other.function.value === func)
+      if (duplicate?.locked.value)
+        return 'duplicate'
+      duplicate?.unsetFunction()
+    }
+    if (func)
+      pin.setFunction(func)
+    else
+      pin.unsetFunction()
+    return null
   }
 }
 
@@ -239,6 +322,7 @@ export function createPinsManagerPlugin() {
           for (const [name, summaryPin] of Object.entries(summary.pins)) {
             manager.pins[name] = markRaw(new Pin(name, summaryPin, ip))
           }
+          manager.init(project, summary, ipManager)
         }
       }
       else {

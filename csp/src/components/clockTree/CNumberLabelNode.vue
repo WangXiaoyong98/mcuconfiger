@@ -41,7 +41,7 @@ const props = defineProps<PropsType>()
 const parameter = computed(
   (): IpParameterNumber | null => {
     const p = toValue(props.node.parameter)
-    if (p.type === 'float' || p.type === 'integer') {
+    if (p && (p.type === 'float' || p.type === 'integer')) {
       return p as IpParameterNumber
     }
     return null
@@ -66,7 +66,7 @@ const value = computed({
     v-model="value"
     class="nodrag"
     :unit="node.unit"
-    :readonly="parameter?.readonly ?? true"
+    :readonly="node.readonly.value"
     :max="parameter?.max.value ?? Number.MAX_SAFE_INTEGER"
     :min="parameter?.min.value ?? Number.MIN_SAFE_INTEGER"
   />

@@ -32,7 +32,7 @@ import type { MenuOptions } from '@imengyu/vue3-context-menu'
 import type { ElTree, TreeNode } from 'element-plus'
 import type { ShallowRef } from 'vue'
 import type { SummaryModuleUnit } from '~/database'
-import { onBeforeUnmount, onMounted, ref, shallowReactive, shallowRef } from 'vue'
+import { onBeforeUnmount, onMounted, ref, shallowReactive, shallowRef, toValue } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useIpManager, useSummaryManager } from '~/database'
 import { useProjectManager } from '~/utils'
@@ -94,7 +94,7 @@ async function loadModules() {
         description: module.description.get(i18n.locale.value),
         define: module.define,
       }
-      if (module.children) {
+      if (Object.keys(module.children).length) {
         node.children = convertToTree(module.children, node_key)
       }
 
@@ -124,7 +124,8 @@ async function loadModules() {
 }
 
 function handleNodeClick(data: TreeType) {
-  emit('click', data.label)
+  if (data.key.includes('.') && !data.children?.length)
+    emit('click', data.label)
 }
 
 function handleContextMenu(event: MouseEvent, data: TreeType, _node: TreeNode, _component: InstanceType<typeof ElTree>) {
@@ -181,9 +182,12 @@ onBeforeUnmount(() => {
         @node-contextmenu="handleContextMenu"
       >
         <template #default="{ node, data }">
-          <span :class="data.highlight ? 'bg-tree-node-item' : ''">
+          <span :class="toValue(data.highlight) ? 'bg-tree-node-item' : ''">
             {{ node.label }}
           </span>
+          <el-tag v-if="data.key.includes('.') && !data.define && !data.children?.length" size="small" type="info" class="unavailable-tag">
+            {{ $t('configuration.notSupported') }}
+          </el-tag>
           <template v-if="data.description">
             <div class="module-tree-node">
               <el-tooltip
@@ -223,5 +227,10 @@ onBeforeUnmount(() => {
 .module-tree-node {
   display: flex;
   align-items: center;
+}
+
+.unavailable-tag {
+  margin-left: auto;
+  margin-right: 8px;
 }
 </style>

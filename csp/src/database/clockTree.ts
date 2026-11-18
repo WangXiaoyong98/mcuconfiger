@@ -38,25 +38,62 @@ import type {
 import type { XYPosition } from '@vue-flow/core'
 import type { App } from 'vue'
 import type { Ip, IpManager, IpParameter } from './ip'
-import { computed, inject, markRaw } from 'vue'
+import type { ClockInput } from '~/utils/clockCalculation'
+import { computed, inject, markRaw, shallowRef, watchEffect } from 'vue'
+import { calculateClocks } from '~/utils/clockCalculation'
+import { isEnumParameter, isNumberParameter } from './ip'
 
 // #region typedef
 
 export class ClockTree {
   private _nodes: Record<string, ClockTreeNode> = {}
   private _edges: Record<string, ClockTreeEdge> = {}
+  private _revision = shallowRef(0)
+
+  calculation = computed(() => {
+    void this._revision.value
+    const inputs: Record<string, ClockInput> = {}
+    for (const [name, node] of Object.entries(this.nodes)) {
+      const parameter = node.parameter.value
+      if (!parameter)
+        continue
+      inputs[name] = {
+        type: node.type,
+        value: parameter.value.value,
+        enabled: parameter.enabled.value,
+        options: isEnumParameter(parameter)
+          ? Object.fromEntries(Object.entries(node.refParameter.value?.values.value ?? parameter.values).map(([key, value]) => [key, value.enabled.value]))
+          : undefined,
+        min: isNumberParameter(parameter) ? parameter.min.value : undefined,
+        max: isNumberParameter(parameter) ? parameter.max.value : undefined,
+      }
+    }
+    return calculateClocks(inputs, Object.values(this._origin.edges))
+  })
 
   constructor(
     private _origin: ClockTreeType,
     public ip: Ip,
   ) {
     for (const [name, node] of Object.entries(this._origin.nodes)) {
-      this._nodes[name] = new ClockTreeNode(node, name, this)
+      this._nodes[name] = markRaw(new ClockTreeNode(node, name, this))
     }
 
     for (const [name, edge] of Object.entries(this._origin.edges)) {
       this._edges[name] = new ClockTreeEdge(edge)
     }
+
+    // Persist derived frequencies even when the clock page has never been opened.
+    watchEffect(() => {
+      const { outputs } = this.calculation.value
+      for (const [name, node] of Object.entries(this.nodes)) {
+        if (node.type === 'ct-output' || node.type === 'ct-probe') {
+          const parameter = node.parameter.value
+          if (parameter && isNumberParameter(parameter))
+            parameter.value.value = outputs[name] ?? 0
+        }
+      }
+    })
   }
 
   get origin(): ClockTreeType {
@@ -81,6 +118,7 @@ export class ClockTree {
     for (const [name, edge] of Object.entries(this._origin.edges)) {
       this._edges[name] = new ClockTreeEdge(edge)
     }
+    this._revision.value++
   }
 }
 
@@ -139,23 +177,24 @@ export class ClockTreeNode {
     return this._name
   }
 
-  parameter = computed((): IpParameter => {
-    const paramName = this._name
-    const parameter = this.ip.containers.clockTree.refParameters.value[paramName]?.parameter
-    if (!parameter) {
-      console.error(`Parameter '${paramName}' not found in IP '${this.ip.instance}'.`)
-    }
-    return parameter.value
-  })
+  refParameter = computed(() => this.ip.containers.clockTree.refParameters.value[this._name])
 
-  enabled = computed((): boolean => this.parameter.value.enabled.value)
+  parameter = computed((): IpParameter | undefined => this.refParameter.value?.parameter.value)
+
+  output = computed(() => this._parent.calculation.value.outputs[this._name] ?? 0)
+
+  issues = computed(() => this._parent.calculation.value.issues.filter(issue => issue.node === this._name))
+
+  enabled = computed((): boolean => this.parameter.value?.enabled.value ?? false)
+
+  readonly = computed((): boolean => !this.enabled.value || (this.refParameter.value?.readonly.value ?? true))
 
   get type(): ClockTreeNodeTypeType {
     return this._origin.type
   }
 
   get position(): XYPosition {
-    return this._origin.position ?? { x: 0, y: 0 }
+    return this._origin.position ??= { x: 0, y: 0 }
   }
 
   get unit(): ClockTreeNodeUnitType | undefined {
@@ -178,8 +217,9 @@ export class ClockTreeManager {
 
   async load(vendor: string, name: string, define: string) {
     const content = await window.electron.invoke('database:getClockTree', vendor, define) as ClockTreeType
-    if (content) {
-      const clockTree = new ClockTree(content, this._ipManager!.getPeripheral(vendor, content.instance)!);
+    const ip = content && this._ipManager?.getPeripheral(vendor, content.instance)
+    if (content && ip) {
+      const clockTree = new ClockTree(content, ip);
       (this._map[vendor] ??= {})[name] = markRaw({ clockTree, define })
     }
   }

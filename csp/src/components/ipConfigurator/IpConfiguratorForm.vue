@@ -66,9 +66,9 @@ const channelRefParameters = shallowRef<ComputedRef<Record<string, IpRefParamete
 let stopBaseWatchHandle: (() => void) | null = null
 
 watch(
-  () => props.instance,
-  (value: string) => {
-    setIp(value)
+  () => [props.instance, props.type],
+  () => {
+    setIp(props.instance)
   },
 )
 
@@ -86,16 +86,6 @@ const refParameters = computed((): Record<string, IpRefParameter> => {
       rtn = currentIp.value.containers.configurations.refParameters.value
     }
     else if (props.type === 'channel') {
-      // 检查引脚的功能是否为 GPIO
-      const parts = props.instance.split('@')
-      if (parts.length === 2) {
-        const pinName = parts[1]
-        const pin = pins[pinName]
-        if (pin && pin.function.value && !pin.function.value.startsWith('GPIO:')) {
-          // 如果引脚的功能不是 GPIO，则返回空对象
-          return {}
-        }
-      }
       rtn = channelRefParameters.value?.value ?? {}
     }
   }
@@ -147,6 +137,7 @@ function stopConfigurationsWatch() {
 
 function cleanUpCurrentIp() {
   stopConfigurationsWatch()
+  channelRefParameters.value = null
 
   for (const handle of stopCommonWatchHandles) {
     handle()
@@ -187,9 +178,9 @@ onBeforeUnmount(() => {
                     :key="key"
                     :value="key"
                     :label="value.comment.value"
-                    :disabled="!value.valid.value.isEnabled || 
-                              (refParameters.gpio_direction_t.parameter.value.value.value === 'output' && !['push_pull', 'open_drain'].includes(key)) ||
-                              (refParameters.gpio_direction_t.parameter.value.value.value === 'input' && !['pullup', 'pulldown'].includes(key))"
+                    :disabled="!value.enabled.value || !value.valid.value.isEnabled
+                      || (refParameters.gpio_direction_t.parameter.value.value.value === 'output' && !['push_pull', 'open_drain'].includes(key))
+                      || (refParameters.gpio_direction_t.parameter.value.value.value === 'input' && !['pullup', 'pulldown'].includes(key))"
                   >
                     <el-tooltip
                       :disabled="value.valid.value.isEnabled"
@@ -207,7 +198,7 @@ onBeforeUnmount(() => {
                     :key="key"
                     :value="key"
                     :label="value.comment.value"
-                    :disabled="!value.valid.value.isEnabled"
+                    :disabled="!value.enabled.value || !value.valid.value.isEnabled"
                   >
                     <el-tooltip
                       :disabled="value.valid.value.isEnabled"
@@ -227,7 +218,7 @@ onBeforeUnmount(() => {
                   :key="key"
                   :value="key"
                   :label="value.comment.value"
-                  :disabled="!value.valid.value.isEnabled"
+                  :disabled="!value.enabled.value || !value.valid.value.isEnabled"
                 >
                   <el-tooltip
                     :disabled="value.valid.value.isEnabled"
@@ -248,19 +239,19 @@ onBeforeUnmount(() => {
               :controls="false"
               :min="refParameter.parameter.value.min.value"
               :max="refParameter.parameter.value.max.value"
-              :disabled="refParameter.parameter.value.readonly"
+              :disabled="refParameter.readonly.value"
               :placeholder="`${refParameter.parameter.value.min.value} ~ ${refParameter.parameter.value.max.value}`"
             />
             <el-input
               v-else-if="isStringParameter(refParameter.parameter.value)"
               v-model="refParameter.parameter.value.value.value"
-              :disabled="refParameter.parameter.value.readonly"
+              :disabled="refParameter.readonly.value"
               :placeholder="refParameter.parameter.value.description.value"
             />
             <el-checkbox
               v-else-if="isBooleanParameter(refParameter.parameter.value)"
               v-model="refParameter.parameter.value.value.value"
-              :disabled="refParameter.parameter.value.readonly"
+              :disabled="refParameter.readonly.value"
             />
           </el-form-item>
         </template>

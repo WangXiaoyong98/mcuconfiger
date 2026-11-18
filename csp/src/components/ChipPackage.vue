@@ -33,7 +33,7 @@ import type { ComputedRef, ShallowRef } from 'vue'
 import type { PanZoomMenuItemModelType } from './containers/PanZoom'
 import type { PanZoomInstance } from '~/components/instance'
 import type { IPackageBase, PackageModelPinType, PackageModelType } from '~/composables/packages/base'
-import { ElMessageBox } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { computed, onBeforeUnmount, onMounted, shallowReactive, shallowRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import * as chipPackages from '~/composables/packages'
@@ -48,7 +48,7 @@ interface PinModelType {
   comment: ComputedRef<string>
 }
 
-/*! < see more https://zhongguose.com/ */
+const emit = defineEmits<{ select: [name: string] }>() /*! < see more https://zhongguose.com/ */
 const DEFAULT_COLOR = '#b2bbbe' /*! < 星灰 */
 const POWER_COLOR = '#e9ddb6' /*! < 菊蕾白 */
 const RESET_COLOR = '#add5a2' /*! < 嘉陵水绿 */
@@ -68,7 +68,6 @@ const { t } = useI18n()
 const project = projectManager.get()!
 const summary = summaryManager.get(project.vendor, project.targetChip)!
 const pins = pinsManager.pins
-
 const pinModels = shallowReactive<Record<string, PinModelType>>({})
 const packageModelRef = shallowRef<PackageModelType>()
 const panZoomRef = shallowRef<PanZoomInstance>()
@@ -262,7 +261,7 @@ function handMouseenter(event: Konva.KonvaEventObject<MouseEvent>, pin: PinModel
       x = shape.getAbsolutePosition().x + containerRect.left + height / 2
       y = shape.getAbsolutePosition().y + containerRect.top - width
     }
-    panZoomRef.value.showTooltip(x, y, placement, `${pin.base.position + 1}: ${pin.base.name}`)
+    panZoomRef.value.showTooltip(x, y, placement, `${pin.base.pin.position}: ${pin.base.name}`)
   }
 }
 
@@ -283,6 +282,7 @@ function handClick(event: Konva.KonvaEventObject<MouseEvent>) {
     const shape = event.target
     const model: PinModelType = shape.attrs.pin
     if (model && model.base.pin.functions.length > 0) {
+      emit('select', model.base.name)
       /*! < mouse left click */
       if (event.evt.button === 0) {
         /*! < alt + mouse left click */
@@ -291,7 +291,7 @@ function handClick(event: Konva.KonvaEventObject<MouseEvent>) {
             confirmButtonText: t('command.ok'),
             cancelButtonText: t('command.cancel'),
             closeOnClickModal: false,
-            inputPattern: /^[A-Z_]\w+$/i,
+            inputPattern: /^(?:[A-Z_]\w*)?$/i,
             inputValue: model.base.pin.label.value,
             inputPlaceholder: t('chipPackage.labelMessageBoxInputPlaceholder'),
             inputErrorMessage: t('chipPackage.labelMessageBoxInputErrorMessage'),
@@ -329,6 +329,7 @@ function handClick(event: Konva.KonvaEventObject<MouseEvent>) {
           }
 
           const menuModel: PanZoomMenuItemModelType[] = [
+            { key: 'toggle-lock', command: t(model.base.pin.locked.value ? 'configuration.unlock' : 'configuration.lock'), divided: false },
             { key: 'Reset State', command: t('chipPackage.resetState'), divided: false, icon: 'ri-refresh-line' },
           ]
 
@@ -354,15 +355,26 @@ function handClick(event: Konva.KonvaEventObject<MouseEvent>) {
 
 function handMenuSelect(pinName: string, command: string) {
   const pin = pins[pinName]
+  if (command === t('configuration.lock') || command === t('configuration.unlock')) {
+    if (pin.function.value)
+      pin.locked.value = !pin.locked.value
+    return
+  }
+  if (pin.locked.value) {
+    ElMessage.warning(t('configuration.locked'))
+    return
+  }
   if (command === t('chipPackage.resetState')) {
     pin.reset()
   }
   else {
     if (command === pin.function.value) { /*! < unset function */
-      pin.unsetFunction()
+      pinsManager.assign(pinName, '')
     }
     else { /*! < set function */
-      pin.setFunction(command)
+      const error = pinsManager.assign(pinName, command)
+      if (error)
+        ElMessage.warning(t(`configuration.${error}`))
     }
   }
 }

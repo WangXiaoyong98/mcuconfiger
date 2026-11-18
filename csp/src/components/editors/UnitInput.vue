@@ -66,7 +66,7 @@ const multiplier = computed(() => {
   return option?.multiplier || 1
 })
 const displayValue = shallowRef(calculateDisplayValue(props.modelValue))
-const valid = computed(() => realValue.value <= props.max && realValue.value >= props.min)
+const valid = computed(() => Number.isFinite(realValue.value) && realValue.value <= props.max && realValue.value >= props.min)
 
 /* !< 监听 modelValue 变化，非编辑状态才更新显示 */
 watch(
@@ -129,6 +129,8 @@ function calculateRealValue(display: string): number {
  *  提交值
  */
 function commit() {
+  if (props.disabled || props.readonly || !valid.value)
+    return
   const value = realValue.value
   emit('change', value)
   emit('update:modelValue', value)

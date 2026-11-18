@@ -28,6 +28,7 @@
     "release": "pnpm release:server && pnpm release:electron",
     "node:static_lint": "eslint .",
     "node:static_typecheck": "vue-tsc --noEmit",
+    "node:test": "tsx --test tests/*.test.ts",
     "node:static": "pnpm node:static_lint && pnpm node:static_typecheck",
     "server:install": "pip install -r server/requirements.txt",
     "server:dev": "python server/csp-server.py --trace serve -p 55432 --debug",

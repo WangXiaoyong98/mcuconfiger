@@ -44,6 +44,13 @@ export default antfu(
     },
   },
   {
+    files: ['tests/**/*.test.ts'],
+    rules: {
+      // These tests run with Node's built-in runner, without a Vitest dependency.
+      'test/no-import-node-test': 'off',
+    },
+  },
+  {
     ignores: [
       'dist',
       'public',

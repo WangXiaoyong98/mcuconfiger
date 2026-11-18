@@ -65,7 +65,7 @@ parameters:
         comment:
           zh-cn: 下拉输入
           en: Pull-down input
-    default: push_pull
+    default: pullup
     display:
       zh-cn: 引脚配置
       en: Pin Configuration
@@ -228,8 +228,10 @@ presets:
       gpio_qualification_mode_t: {}
   Output:
     refParameters:
-      gpio_direction_t: {}
-      gpio_pin_type_t: {}
+      gpio_direction_t:
+        default: output
+      gpio_pin_type_t:
+        default: push_pull
       gpio_drive_strength_t: {}
       gpio_slew_rate_t: {}
       gpio_current_source_t: {}

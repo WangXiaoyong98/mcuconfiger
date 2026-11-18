@@ -30,13 +30,16 @@
 <script setup lang="ts">
 import type { ChipPackageInstance } from '~/components/instance'
 import { nextTick, onBeforeUnmount, onMounted, shallowReactive, shallowRef, watch } from 'vue'
-import { useIpManager } from '~/database'
+import { useIpManager, useSummaryManager } from '~/database'
 import { useProjectManager } from '~/utils'
 
 const projectManager = useProjectManager()
 const ipManager = useIpManager()
 
 const project = projectManager.get()!
+const summary = useSummaryManager().get(project.vendor, project.targetChip)!
+const pinView = shallowRef('diagram')
+const unavailableModule = shallowRef('')
 
 const chipPackageRef = shallowRef<ChipPackageInstance>()
 const ipInfoRef = shallowReactive({
@@ -70,9 +73,13 @@ function handModuleTreeClick(name: string) {
   chipPackageRef.value?.highlightByNames([])
   stopConfigurationsWatch()
   const containers = []
+  unavailableModule.value = ''
+  ipInfoRef.ip = name
+  ipInfoRef.containers = []
+  ipInfoRef.channel = ''
 
   if (!ip) {
-    console.error(`The ip '${name}' is not found.`)
+    unavailableModule.value = name
     return
   }
 
@@ -97,6 +104,12 @@ function handModuleTreeClick(name: string) {
   ipInfoRef.ip = name
   ipInfoRef.containers = containers
   ipInfoRef.channel = ''
+}
+
+function handPinSelect(name: string) {
+  handModuleTreeClick(summary.pinInstance)
+  ipInfoRef.channel = name
+  chipPackageRef.value?.highlightByNames([name])
 }
 
 function handModuleTreeCommand(command: string, args: any) {
@@ -143,6 +156,8 @@ onBeforeUnmount(() => {
       />
     </el-splitter-panel>
     <el-splitter-panel min="5%" size="30%">
+      <el-empty v-if="unavailableModule" :description="$t('configuration.noPeripheral', { name: unavailableModule })" />
+      <el-empty v-else-if="!ipInfoRef.ip" :description="$t('configuration.selectPeripheral')" />
       <el-splitter layout="vertical">
         <el-splitter-panel v-for="container in ipInfoRef.containers" :key="container">
           <el-card>
@@ -175,10 +190,17 @@ onBeforeUnmount(() => {
       </el-splitter>
     </el-splitter-panel>
     <el-splitter-panel min="20%" size="60%">
-      <div class="chip-package-div flex">
-        <ChipPackage ref="chipPackageRef" />
-      </div>
-      <div class="my-4 items-center justify-center" style="text-align: center;">
+      <el-tabs v-model="pinView" class="pin-view-tabs">
+        <el-tab-pane :label="$t('configuration.diagram')" name="diagram">
+          <div class="chip-package-div flex">
+            <ChipPackage ref="chipPackageRef" @select="handPinSelect" />
+          </div>
+        </el-tab-pane>
+        <el-tab-pane label="Pinmux" name="pinmux">
+          <PinMuxTable @select="handPinSelect" />
+        </el-tab-pane>
+      </el-tabs>
+      <div v-if="pinView === 'diagram'" class="my-4 items-center justify-center" style="text-align: center;">
         <el-tooltip :content="$t('command.zoomIn')">
           <el-button circle @click="handZoomIn">
             <el-icon><i class="ri-zoom-in-line" /></el-icon>
@@ -240,8 +262,22 @@ onBeforeUnmount(() => {
 }
 
 .chip-package-div {
+  display: flex;
   flex: 1;
   min-width: 0;
   min-height: 0;
+}
+
+.pin-view-tabs,
+.pin-view-tabs :deep(.ep-tabs__content),
+.pin-view-tabs :deep(.ep-tab-pane) {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.pin-view-tabs :deep(.ep-tabs__header) {
+  order: -1;
 }
 </style>

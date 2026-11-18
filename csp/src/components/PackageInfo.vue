@@ -154,7 +154,7 @@ const url = computed(() => props.description.url?.get(i18n.locale.value))
         </el-descriptions-item>
       </el-descriptions>
 
-      <div v-if="props.description.url" class="package-links">
+      <div v-if="url" class="package-links">
         <el-divider content-position="center">
           {{ $t('packageInfo.relatedLinks') }}
         </el-divider>
@@ -193,7 +193,7 @@ const url = computed(() => props.description.url?.get(i18n.locale.value))
 .card-header h2 {
   margin: 0;
   font-size: 1.5rem;
-  color: var(--el-text-color-primary);
+  color: var(--ep-text-color-primary);
 }
 
 .vendor-info {

@@ -176,7 +176,8 @@ function toggleLayoutLock() {
 }
 
 function handConnect(connection: Connection) {
-  addEdges({ ...connection, type: 'smoothstep' })
+  if (isDevMode.value && !isLayoutLocked.value)
+    addEdges({ ...connection, type: 'ct-smoothstep' })
 }
 
 watch(getSelectedNodes, () => {
@@ -276,7 +277,10 @@ defineExpose({
       <VueFlow
         :nodes="nodes"
         :edges="edges"
-        :nodes-draggable="!isLayoutLocked"
+        :nodes-draggable="isDevMode && !isLayoutLocked"
+        :nodes-connectable="isDevMode && !isLayoutLocked"
+        :edges-updatable="isDevMode && !isLayoutLocked"
+        :delete-key-code="isDevMode && !isLayoutLocked ? 'Delete' : null"
         fit-view-on-init
         elevate-edges-on-select
         :min-zoom="0.2"

@@ -40,10 +40,10 @@ const state = shallowReactive({
 })
 
 function updateProgress(total: number, index: number, file: string) {
-  state.total = total
-  state.current = index
+  state.total = Number.isFinite(total) ? Math.max(0, total) : 0
+  state.current = Number.isFinite(index) ? Math.max(0, Math.min(index, state.total)) : 0
   state.currentFile = file
-  state.progress = Math.floor((index / total) * 100)
+  state.progress = state.total > 0 ? Math.floor((state.current / state.total) * 100) : 0
 }
 
 function show(title: string) {
@@ -81,13 +81,21 @@ defineExpose({
     append-to-body
   >
     <div class="loading-content">
-      <el-progress :percentage="state.progress" />
+      <el-progress :percentage="state.progress" :indeterminate="state.total === 0" />
       <div class="loading-info">
         <p v-if="state.total > 0">
           {{ $t('label.progress') }}: {{ state.current }}/{{ state.total }}
         </p>
-        <p>{{ $t('label.currentFile') }}: {{ state.currentFile }}</p>
+        <p class="current-file">
+          {{ $t('label.currentFile') }}: {{ state.currentFile }}
+        </p>
       </div>
     </div>
   </el-dialog>
 </template>
+
+<style scoped>
+.current-file {
+  overflow-wrap: anywhere;
+}
+</style>

@@ -248,7 +248,7 @@ parameters:
   rcm_hsi_clk_div_pll_t:
     type: enum
     values:
-      "2":
+      "/2":
         comment:
           zh-cn: /2
           en: /2
@@ -258,7 +258,7 @@ parameters:
     description:
       zh-cn: 用于 PLL 的 HSI RC 分频器
       en: HSI RC Divider for PLL
-    default: "2"
+    default: "/2"
     readonly: true
     visible: false
   rcm_hse_clk_div_pll_t:
